@@ -1,4 +1,4 @@
-# backend-collab
+# project-collabuc
 
 
 
@@ -15,14 +15,14 @@ Already a pro? Just edit this README.md and make it your own. Want to make it ea
 
 ```
 cd existing_repo
-git remote add origin https://gitlab.com/collab6162139/backend-collab.git
+git remote add origin https://gitlab.com/collab6162139/project-collabuc.git
 git branch -M main
 git push -uf origin main
 ```
 
 ## Integrate with your tools
 
-- [ ] [Set up project integrations](https://gitlab.com/collab6162139/backend-collab/-/settings/integrations)
+- [ ] [Set up project integrations](https://gitlab.com/collab6162139/project-collabuc/-/settings/integrations)
 
 ## Collaborate with your team
 
