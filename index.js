@@ -1,7 +1,8 @@
 require('dotenv').config();
 const cors = require('cors')
 const express = require('express');
-const {connection} = require("./db/dbconnection")
+const UserProfile = require('./model/UserProfile');
+const sequelize = require('./db/dbconnection')
 const loginRoutes = require("./routes/login-routes");
 const registerRoutes = require("./routes/register-routes");
 const barangayRoutes = require("./routes/barangay-routes");
@@ -12,15 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cors());
 
-
-
-connection.addListener('error', (err) => {
-    console.log("error")
-    console.log(err)
-    if(!err){
-        console.log("Connection successful")
-    }
-  });
+const port = process.env.PORT || 3000;
 
 app.use("/main",loginRoutes);
 app.use("/main",registerRoutes)
@@ -33,6 +26,24 @@ app.use((err,req,res,next)=>{
     }  
 })
 
-app.listen(3000,()=>{
-    console.log(`Naminaw ni cya sa port 3000`)
-});
+
+//database connection and server start
+async function startServer(){
+    try{
+        //database connevction
+        await  sequelize.authenticate();
+        console.log('Database connected successfully!')
+
+        //table will be created if it does not exist yet.
+        await sequelize.sync()
+
+        app.listen(port,() =>{
+            console.log(`Server running at  ${port}`);
+        });
+     
+    }catch(error){
+            console.log(error);
+    }
+}
+
+startServer();

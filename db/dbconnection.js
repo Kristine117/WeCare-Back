@@ -1,12 +1,15 @@
-// Get the client
-const mysql = require("mysql2");
-// Create the connection to database
 
-const connection = mysql.createConnection(
-  `mysql://${process.env.USER}:${process.env.PASSWORD}@localhost:3306/${process.env.DB}`
-);
+const { Sequelize } = require('sequelize');
 
-module.exports = {
-  connection
-}
+
+
+    const sequelize =  new Sequelize( process.env.DB,process.env.USER,process.env.PASSWORD,{
+        host: process.env.HOST,
+        dialect: 'mysql'
+    });
+
+
+
+module.exports =  sequelize;
+
 
