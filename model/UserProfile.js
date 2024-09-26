@@ -1,6 +1,7 @@
 const {DataTypes} = require ('sequelize');
 const sequelize = require('../db/dbconnection');
 const experience = require("./Experience")
+const baranggay = require('./Baranggay')
 
 const UserProfile = 
 sequelize.define('UserProfile',{
@@ -42,6 +43,10 @@ sequelize.define('UserProfile',{
     baranggayId:{
         type: DataTypes.INTEGER,
         allowNull : false,
+        references:{
+            model:baranggay,
+            key:'baranggayId'
+        }
     },
 
     contactNumber:{

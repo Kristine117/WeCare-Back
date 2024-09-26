@@ -3,19 +3,31 @@ const sequelize = require('../db/dbconnection');
 const userprofile = require('./UserProfile')
 
 const User = 
-sequelize.define('User',{
+sequelize.define('User', {
     userId: {
         type: DataTypes.INTEGER,
         allowNull:false,
         references:{
-            model:UserProfile,
+            model:userprofile,
             key: 'userId'
+            },
+        primaryKey:true
+
+        },
+
+        email:{
+            type:DataTypes.STRING,
+            allowNull:false
+        },
+
+        password:{
+            type:DataTypes.STRING,
+            allowNull:false
         }
     
-    }
 
 },{
-    tableName: 'users',
+    tableName: 'user',
     timestamps:false
 }
 
