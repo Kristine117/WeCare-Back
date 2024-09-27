@@ -1,7 +1,7 @@
 const {DataTypes} = require ('sequelize');
 const sequelize = require('../db/dbconnection');
 const experience = require("./Experience")
-const baranggay = require('./Baranggay')
+const barangay = require('./Barangay')
 
 const UserProfile = 
 sequelize.define('UserProfile',{
@@ -9,7 +9,8 @@ sequelize.define('UserProfile',{
     userId: {
         type: DataTypes.INTEGER,
         allowNull:false,
-        primaryKey:true,     
+        primaryKey:true,   
+        autoIncrement: true  
     },
 
     lastname :{
@@ -40,13 +41,14 @@ sequelize.define('UserProfile',{
         allowNull : false,
     },
 
-    baranggayId:{
+    barangayId:{
         type: DataTypes.INTEGER,
         allowNull : false,
         references:{
-            model:baranggay,
-            key:'baranggayId'
-        }
+            model:barangay,
+            key:'barangayId'
+        },
+        defaultValue: 0
     },
 
     contactNumber:{
@@ -63,13 +65,14 @@ sequelize.define('UserProfile',{
         allowNull : false,
     },
 
-    experienceId : {
+     experienceId : {
         type: DataTypes.INTEGER,
         allowNull:false,
         references: {
             model: experience, 
             key: 'experienceId' 
-          }
+          },
+          defaultValue:0
 
     }
 },{

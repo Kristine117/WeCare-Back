@@ -1,21 +1,21 @@
 const {DataTypes} = require ('sequelize');
 const sequlize = require('../db/dbconnection')
 
-const Baranggay = sequlize.define('Baranggay',{
-    baranggayId: {
+const Barangay = sequlize.define('Barangay',{
+    barangayId: {
         type:DataTypes.INTEGER,
         allowNull:false,
-        primaryKey:true
-        
+        primaryKey:true,
+        autoIncrement: true
     },
-    baranggay:{
+    barangay:{
         type:DataTypes.STRING,
         allowNull:false
     }
 
 },{
-    tableName: 'baranggay',
+    tableName: 'barangay',
     timestamps:false
 })
 
-module.exports= Baranggay;
+module.exports= Barangay;

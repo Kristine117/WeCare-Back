@@ -1,33 +1,37 @@
-const { connection } = require("../db/dbconnection");
+const user = require("../model/User");
+const userProfile = require("../model/UserProfile")
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+const addNewUserHandler =async(req,res,next)=>{
 
-const addNewUserHandler =(data,data1)=>{
+    try {
+        const {lastname,firstname,
+            email,userType, street,
+            barangayId,
+            contactNumber,gender,birthDate,
+            experienceId,password} = req.body;
+    
+        const encryptedPassword = await bcrypt.hash(password,saltRounds)
+    
+        const newUserProfile = await userProfile.create({lastname:lastname,
+            firstname:firstname,email:email,userType:userType,
+            street:street,barangayId:barangayId,contactNumber:contactNumber,
+            gender:gender,birthDate:birthDate,experienceId:experienceId
+        });
 
-      
-    // Insert into user_profile
-    connection.query(
-    'INSERT INTO `user_profile` (`lastname`, `firstname`, `email`, `user_type`, `street`, `barangay_id`, `contact_number`, `gender`, `birthdate`, `experience_id`) VALUES (?)',
-    [data,],
-    (err, result) => {
-        if (err) {
-        console.error('Error inserting into user_profile:', err);
-        return;
-        }
-
-        if (result.affectedRows > 0) {
-
-        let newRow = [result.insertId,...data1];
-     
-
-        connection.query('INSERT INTO `user` (`user_id`,`email`,`password`) VALUES (?)',[newRow,],(err2,result2)=>{
-            console.log("is removal");
-            console.log(result2);
-            })
-        } else {    
-        
-        connection.end();
-        }
+        const newUser = await user.create({
+            userId: await newUserProfile.dataValues.userId,
+            email:email,
+            password:encryptedPassword
+        })
+    
+        res.status(200).send({
+            isSuccess: true,
+            message:"It worked well"
+        })
+    }catch(e){
+       next(e)
     }
-    );
 
 }
 const updateUserHandler = (data)=> {
