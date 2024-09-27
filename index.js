@@ -39,7 +39,7 @@ async function startServer(){
         await sequelize.sync()
 
         app.listen(port,() =>{
-            console.log(`Server running at  ${port}`);
+            console.log(`Server running at  ${process.env.PORT}`);
         });
      
     }catch(error){

@@ -8,7 +8,7 @@ const addNewExperienceHandler=(data)=>{
     return {
         isSuccessful
     }
-}
+} 
 
 module.exports = {
     addNewExperienceHandler}
