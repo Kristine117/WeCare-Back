@@ -2,6 +2,7 @@ require('dotenv').config();
 const cors = require('cors')
 const express = require('express');
 const UserProfile = require('./model/UserProfile');
+const User = require('./model/User');
 const sequelize = require('./db/dbconnection')
 const loginRoutes = require("./routes/login-routes");
 const registerRoutes = require("./routes/register-routes");
