@@ -1,25 +1,58 @@
 require('dotenv').config();
 const cors = require('cors')
 const express = require('express');
-const UserProfile = require('./model/UserProfile');
-const User = require('./model/User');
+
 const sequelize = require('./db/dbconnection')
 const loginRoutes = require("./routes/login-routes");
 const registerRoutes = require("./routes/register-routes");
 const barangayRoutes = require("./routes/barangay-routes");
 const experienceRoutes = require("./routes/experience-routes");
 const app = express();
+const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
+
+const options = {
+	host: process.env.HOST,
+	port: 3306,
+	user: process.env.USER,
+	password: process.env.PASSWORD,
+	database: process.env.DB,
+    checkExpirationInterval: 900000,
+	expiration: 86400000
+};
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cors());
 
+
+
+//session creation
+const sessionStore = new MySQLStore(options);
+
+app.use(session({
+	key: process.env.SESSION,
+	secret: process.env.SESSION_SECRET,
+	store: sessionStore,
+	resave: false,
+	saveUninitialized: false,
+}));
+
+// Optionally use onReady() to get a promise that resolves when store is ready.
+sessionStore.onReady().then(() => {
+	// MySQL session store ready for use.
+	console.log('MySQLStore ready');
+}).catch(error => {
+	// Something went wrong.
+	console.error(error);
+});
+
 const port = process.env.PORT || 3000;
 
 app.use("/main",loginRoutes);
-app.use("/main",registerRoutes)
-app.use("/main",barangayRoutes)
-app.use("/main",experienceRoutes)
+app.use("/main",registerRoutes);
+app.use("/main",barangayRoutes);
+app.use("/main",experienceRoutes);
 
 app.use((err,req,res,next)=>{
     if(err){
