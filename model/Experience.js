@@ -2,7 +2,7 @@ const {DataTypes} = require ('sequelize');
 const sequelize = require('../db/dbconnection');
 
 const Experience = 
-sequelize.define('Experience',{
+sequelize.define('Experience', {
     
     experienceId: {
         type: DataTypes.INTEGER,

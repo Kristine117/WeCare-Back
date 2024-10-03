@@ -1,6 +1,8 @@
 require('dotenv').config();
 const cors = require('cors')
 const express = require('express');
+const http = require('http'); 
+const socketIo = require('socket.io');
 const UserProfile = require('./model/UserProfile');
 const User = require('./model/User');
 const sequelize = require('./db/dbconnection')
@@ -8,18 +10,41 @@ const loginRoutes = require("./routes/login-routes");
 const registerRoutes = require("./routes/register-routes");
 const barangayRoutes = require("./routes/barangay-routes");
 const experienceRoutes = require("./routes/experience-routes");
+const path = require('path');
+const { loadMessages, sendMessage, uploadFiles } = require('./controller/socket-controller');
+
+
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
-app.use(cors());
+//app.use(cors());
+// CORS Configuration
+app.use(cors({
+    origin: 'http://localhost:3000',  // Allow requests from your frontend
+    methods: ['GET', 'POST'],         // Allow specific HTTP methods
+    credentials: true                 // Allow cookies and authentication headers
+}));
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 
 app.use("/main",loginRoutes);
 app.use("/main",registerRoutes)
 app.use("/main",barangayRoutes)
 app.use("/main",experienceRoutes)
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Set up Socket.IO with CORS configuration
+const io = socketIo(server, {
+    cors: {
+        origin: 'http://localhost:3000',  // Allow requests from your frontend
+        methods: ['GET', 'POST'],
+        credentials: true
+    }
+});
+
 
 app.use((err,req,res,next)=>{
     if(err){
@@ -38,7 +63,7 @@ async function startServer(){
         //table will be created if it does not exist yet.
         await sequelize.sync()
 
-        app.listen(port,() =>{
+        server.listen(port,() =>{
             console.log(`Server running at  ${process.env.PORT}`);
         });
      
@@ -48,3 +73,31 @@ async function startServer(){
 }
 
 startServer();
+
+// Socket.IO connection handler
+io.on('connection', (socket) => {
+    console.log('A user connected');
+
+    // Listen for a request to load existing messages
+    socket.on('loadMessages', ({ senderId, recipientId }) => {
+       const messages = loadMessages(socket, senderId, recipientId); // Call loadMessages with parameters
+        socket.emit("loadedMessages", messages); // Emit the loaded messages to the client
+        
+    });
+
+    // Handle new message event
+    socket.on('sendMessage', (msg) => {
+        sendMessage(msg, io);
+    });
+
+    // Handle file upload
+    socket.on('uploadFiles', (file) => {
+        console.log(file)
+        uploadFiles(file, io);
+    });
+
+    // Handle user disconnection
+    socket.on('disconnect', () => {
+        console.log('A user disconnected');
+    });
+});
