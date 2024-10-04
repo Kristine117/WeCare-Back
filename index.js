@@ -1,10 +1,7 @@
 require('dotenv').config();
 const cors = require('cors')
 const express = require('express');
-const http = require('http'); 
-const socketIo = require('socket.io');
-const UserProfile = require('./model/UserProfile');
-const User = require('./model/User');
+
 const sequelize = require('./db/dbconnection')
 const loginRoutes = require("./routes/login-routes");
 const registerRoutes = require("./routes/register-routes");
@@ -15,6 +12,18 @@ const { loadMessages, sendMessage, uploadFiles } = require('./controller/socket-
 
 
 const app = express();
+const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
+
+const options = {
+	host: process.env.HOST,
+	port: 3306,
+	user: process.env.USER,
+	password: process.env.PASSWORD,
+	database: process.env.DB,
+    checkExpirationInterval: 900000,
+	expiration: 86400000
+};
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -29,9 +38,11 @@ app.use(cors({
 const port = process.env.PORT || 4000;
 
 app.use("/main",loginRoutes);
-app.use("/main",registerRoutes)
-app.use("/main",barangayRoutes)
-app.use("/main",experienceRoutes)
+app.use("/main",registerRoutes);
+app.use("/main",barangayRoutes);
+app.use("/main",experienceRoutes);
+app.use("/main",userRoutes);
+app.use("/dashboard",dashboardRoutes);
 
 // Create HTTP server
 const server = http.createServer(app);

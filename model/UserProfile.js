@@ -16,6 +16,12 @@ sequelize.define('UserProfile',{
     lastname :{
         type:DataTypes.STRING,
         allowNull : true,
+        validate: {
+            len: {
+                args: [2,10],
+                msg: "Naay error"
+            }
+        }
     },
 
     firstname :{

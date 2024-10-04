@@ -1,14 +1,14 @@
 const jwt = require('jsonwebtoken');
 
-const secret_key = process.env.SECRET_KEY;
+const secret_key = "CourseBookingAPIB303";
 
-module.exports.createAccessToken= (user)=>{
+module.exports.createAccessToken= async (user)=>{	
     const user_data ={
-        id:user._id,
+        userId:user.userId,
         email: user.email,
+		userType:user.userType
     }
-
-    return jwt.sign(user_data, secret_key,{ algorithm: 'RS256' });
+    return jwt.sign(user_data, secret_key,{});
 }
 
 module.exports.verify = (request, response, next) => {
