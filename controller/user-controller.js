@@ -130,8 +130,7 @@ const authenticationHandler = async(req,res,next)=>{
         password
     } = req.body;
    
-    try{
-   
+    try{   
     const userAuthenticate = await user.findOne({
         where: {
             email: email
@@ -168,11 +167,41 @@ const authenticationHandler = async(req,res,next)=>{
     }
 }
 
+const retrieveListUserDetails = async(req,res,next)=>{
+
+    try{
+        const userType = req.user.userType === "senior" ? "assistant" : "senior";
+        const userList = await userProfile.findAll({
+            where: {
+                userType: "common"
+            }
+        })
+
+        const newList = await userList.map(async(val)=>{
+            val.dataValues['userId'] = await exportEncryptedData(String(val.dataValues.userId));
+            return val.dataValues;
+        });
+
+    
+
+        res.status(201).send({
+            isSuccess:true,
+            message: "Successfully retrieve users",
+            data: await Promise.all(newList)
+        })
+
+
+    }catch(e){
+        next(e)
+    }
+}
+
 module.exports = {
     addNewUserHandler,
     grabSession,
     saveUserRegistrationInSession,
     authenticationHandler,
     getUserDataUsingAuthenticationToken,
-    updateUserHandlerForProfile
+    updateUserHandlerForProfile,
+    retrieveListUserDetails
 }
