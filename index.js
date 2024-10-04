@@ -5,20 +5,33 @@ const http = require('http');
 const socketIo = require('socket.io');
 const UserProfile = require('./model/UserProfile');
 const User = require('./model/User');
+const app = express();
+const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 const sequelize = require('./db/dbconnection')
 const loginRoutes = require("./routes/login-routes");
 const registerRoutes = require("./routes/register-routes");
 const barangayRoutes = require("./routes/barangay-routes");
 const experienceRoutes = require("./routes/experience-routes");
+const userRoutes = require("./routes/user-routes");
 const path = require('path');
 const { loadMessages, sendMessage, uploadFiles } = require('./controller/socket-controller');
 
 
-const app = express();
+
+const port = process.env.PORT || 4000;
+const options = {
+	host: process.env.HOST,
+	port: 3306,
+	user: process.env.USER,
+	password: process.env.PASSWORD,
+	database: process.env.DB,
+    checkExpirationInterval: 900000,
+	expiration: 86400000
+};
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
-//app.use(cors());
 // CORS Configuration
 app.use(cors({
     origin: 'http://localhost:3000',  // Allow requests from your frontend
@@ -26,12 +39,16 @@ app.use(cors({
     credentials: true                 // Allow cookies and authentication headers
 }));
 
-const port = process.env.PORT || 4000;
 
 app.use("/main",loginRoutes);
 app.use("/main",registerRoutes)
 app.use("/main",barangayRoutes)
 app.use("/main",experienceRoutes)
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Message routes
+app.use('/api/messages', messageRoutes);
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -46,11 +63,27 @@ const io = socketIo(server, {
 });
 
 
-app.use((err,req,res,next)=>{
-    if(err){
-        res.status(500).send("Something went wrong")
-    }  
-})
+
+//session creation
+const sessionStore = new MySQLStore(options);
+
+app.use(session({
+	key: process.env.SESSION,
+	secret: process.env.SESSION_SECRET,
+	store: sessionStore,
+	resave: false,
+	saveUninitialized: false,
+}));
+
+// Optionally use onReady() to get a promise that resolves when store is ready.
+sessionStore.onReady().then(() => {
+	// MySQL session store ready for use.
+	console.log('MySQLStore ready');
+}).catch(error => {
+	// Something went wrong.
+	console.error(error);
+});
+
 
 
 //database connection and server start
@@ -74,30 +107,15 @@ async function startServer(){
 
 startServer();
 
-// Socket.IO connection handler
+// Socket.IO logic
 io.on('connection', (socket) => {
-    console.log('A user connected');
+    console.log('User connected:', socket.id);
 
-    // Listen for a request to load existing messages
-    socket.on('loadMessages', ({ senderId, recipientId }) => {
-       const messages = loadMessages(socket, senderId, recipientId); // Call loadMessages with parameters
-        socket.emit("loadedMessages", messages); // Emit the loaded messages to the client
-        
+    socket.on('sendMessage', (message) => {
+        io.emit('receiveMessage', message); // Emit to all clients
     });
 
-    // Handle new message event
-    socket.on('sendMessage', (msg) => {
-        sendMessage(msg, io);
-    });
-
-    // Handle file upload
-    socket.on('uploadFiles', (file) => {
-        console.log(file)
-        uploadFiles(file, io);
-    });
-
-    // Handle user disconnection
     socket.on('disconnect', () => {
-        console.log('A user disconnected');
+        console.log('User disconnected:', socket.id);
     });
 });
