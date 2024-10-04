@@ -17,12 +17,30 @@ sequelize.define('User', {
 
         email:{
             type:DataTypes.STRING,
-            allowNull:false
+            allowNull:false,
+            validate: {
+                len: {
+                    args:[10,20],
+                    msg: "Invalid length for email"
+                },
+                isEmail: {
+                    msg: "Email not recognize"
+                }
+            }
         },
 
         password:{
             type:DataTypes.STRING,
-            allowNull:false
+            allowNull:false,
+            validate: {
+                len: {
+                    args:[10,20],
+                    msg: "Invalid length for email"
+                },
+                isEmail: {
+                    msg: "Email not recognize"
+                }
+            }
         }
     
 

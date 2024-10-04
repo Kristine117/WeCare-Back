@@ -8,6 +8,7 @@ const registerRoutes = require("./routes/register-routes");
 const barangayRoutes = require("./routes/barangay-routes");
 const experienceRoutes = require("./routes/experience-routes");
 const userRoutes = require("./routes/user-routes");
+const dashboardRoutes = require("./routes/dashboard-routes");
 const app = express();
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
@@ -55,6 +56,8 @@ app.use("/main",registerRoutes);
 app.use("/main",barangayRoutes);
 app.use("/main",experienceRoutes);
 app.use("/main",userRoutes);
+app.use("/dashboard",dashboardRoutes);
+
 app.use((err,req,res,next)=>{
     if(err){
         res.status(500).send("Something went wrong")
