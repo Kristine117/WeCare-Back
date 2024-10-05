@@ -89,12 +89,19 @@ sessionStore.onReady().then(() => {
     console.error(error);
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    if (err) {
-        res.status(500).send("Something went wrong");
-    }  
-});
+
+app.use((err,req,res,next)=>{
+    console.log(err)
+    if(err){
+        res.status(500).send({
+            isSuccess: false,
+            message: err.message
+        })
+
+    }    
+})
+
+
 
 // Database connection and server start
 async function startServer() {
@@ -140,5 +147,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// Export the io instance
-module.exports = { io }; 
+
+startServer();
+
