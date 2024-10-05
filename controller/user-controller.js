@@ -74,7 +74,7 @@ async(req,res,next)=>{
     const encryptedId = await exportEncryptedData(String(req.user.userId));
     res.status(200).send({
         isSuccess: true,
-        message: "Hello there",
+        message: "Successfully retrieve user's information",
         data: {
             encryptedId: encryptedId,
             ...userInfo?.dataValues

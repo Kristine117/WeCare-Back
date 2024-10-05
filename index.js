@@ -55,8 +55,8 @@ app.use("/dashboard",dashboardRoutes);
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Message routes
-app.use('/api/messages', messageRoutes);
+// // Message routes
+// app.use('/api/messages', messageRoutes);
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -118,7 +118,6 @@ async function startServer(){
     }
 }
 
-startServer();
 
 // Socket.IO logic
 io.on('connection', (socket) => {
