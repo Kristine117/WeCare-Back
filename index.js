@@ -118,8 +118,6 @@ async function startServer() {
     }
 }
 
-// Start the server
-startServer();
 
 // Socket.IO connection handler
 io.on('connection', (socket) => {

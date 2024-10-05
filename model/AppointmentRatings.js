@@ -9,7 +9,11 @@ sequelize.define('AppointmentRatings',{
         type: DataTypes.INTEGER,
         autoIncrement:true,
         allowNull:false,
-        primaryKey:true  
+        primaryKey:true,
+        references:{
+            model:Ratings,
+            key:'ratingsId'
+        }  
     },
 
     ratingsId: {
@@ -22,7 +26,7 @@ sequelize.define('AppointmentRatings',{
         }
     }
 },{
-    tableName: 'appointment_ratings',
+    tableName: 'appointmentratings',
     timestamps:false
 }
 

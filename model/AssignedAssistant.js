@@ -1,17 +1,32 @@
 const {DataTypes}= require('sequelize');
 const sequelize = require('../db/dbconnection')
-const userprofile = require('./UserProfile');
+const UserProfile = require('./UserProfile');
+const Appointment = require("./Appointment");
 
-
-const Assistant = sequelize.define('AssingedAssistant',{
+const AssignedAssistant = sequelize.define('AssingedAssistant',{
     userId:{
-
+        type: DataTypes.INTEGER,
+        allowNull:false,
+        primaryKey:true,
+        references:{
+            model: UserProfile,
+            key:'userId'
+        }
     },
     appointmentId:{
-        
+        type: DataTypes.INTEGER,
+        allowNull:false,
+        primaryKey:true,
+        references:{
+            model: Appointment,
+            key:'appointmentId'
+        }
     }
 
 },{
-    tableName:'AssignedAssistant',
+    tableName:'assignedassistant',
     timestamps:false
 })
+
+
+module.exports = AssignedAssistant;
