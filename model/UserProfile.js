@@ -48,7 +48,7 @@ sequelize.define('UserProfile',{
 
     barangayId:{
         type: DataTypes.INTEGER,
-        allowNull : false,
+        allowNull : true,
         references:{
             model:barangay,
             key:'barangayId'
@@ -72,7 +72,7 @@ sequelize.define('UserProfile',{
 
      experienceId : {
         type: DataTypes.INTEGER,
-        allowNull:false,
+        allowNull:true,
         references: {
             model: experience, 
             key: 'experienceId' 
