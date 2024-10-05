@@ -94,8 +94,12 @@ sessionStore.onReady().then(() => {
 });
 
 app.use((err,req,res,next)=>{
+    console.log(err)
     if(err){
-        res.status(500).send("Something went wrong")
+        res.status(500).send({
+            isSuccess: false,
+            message: err.message
+        })
     }  
 })
 
@@ -131,5 +135,7 @@ io.on('connection', (socket) => {
         console.log('User disconnected:', socket.id);
     });
 });
+
+startServer();
 
 

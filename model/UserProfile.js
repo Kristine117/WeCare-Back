@@ -10,24 +10,23 @@ sequelize.define('UserProfile',{
         type: DataTypes.INTEGER,
         allowNull:false,
         primaryKey:true,   
-        autoIncrement: true  
+        autoIncrement: true
     },
 
     lastname :{
         type:DataTypes.STRING,
         allowNull : true,
-        validate: {
-            len: {
-                args: [2,10],
-                msg: "Naay error"
-            }
-        }
+        
     },
 
     firstname :{
         type:DataTypes.STRING,
         allowNull : false,
-
+        isLengthValid(value){
+            if(value.length < 2 && value.length > 255){
+                throw new Error("First Name length must be between 2 - 255 characters")
+            }
+        }
     },
 
     email:{
