@@ -97,7 +97,10 @@ app.use((err,req,res,next)=>{
             isSuccess: false,
             message: err.message
         })
-    )
+
+    }    
+})
+
 
 
 // Database connection and server start
