@@ -13,7 +13,7 @@ const HealthStatus = sequelize.define('HealthStatus',{
     }
 
 },{
-    tableName: 'health_status',
+    tableName: 'healthstatus',
     timestamps:false
 })
 

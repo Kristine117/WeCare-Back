@@ -24,7 +24,7 @@ const AssignedAssistant = sequelize.define('AssingedAssistant',{
     }
 
 },{
-    tableName:'assigned_assistant',
+    tableName:'assignedassistant',
     timestamps:false
 })
 

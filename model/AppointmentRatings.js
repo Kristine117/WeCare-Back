@@ -26,7 +26,7 @@ sequelize.define('AppointmentRatings',{
         }
     }
 },{
-    tableName: 'appointment_ratings',
+    tableName: 'appointmentratings',
     timestamps:false
 }
 

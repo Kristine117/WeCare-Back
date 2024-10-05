@@ -63,20 +63,30 @@ const grabSession = async(req,res,next)=>{
 const getUserDataUsingAuthenticationToken = 
 async(req,res,next)=>{
    try{
-   
+
     const userInfo = await userProfile.findOne({
-        where: {
-            userId: req.user.userId
+        where:{
+            userId:req.user.userId
         }
     })
-
-
     const encryptedId = await exportEncryptedData(String(req.user.userId));
+
+    if(!userInfo){
+
+        return res.status(400).send({
+            isSuccess: false,
+            message: "Something went wrong!",
+        })
+    }
+
+    delete userInfo?.dataValues.userId;
+
+
     res.status(200).send({
         isSuccess: true,
         message: "Successfully retrieve user's information",
         data: {
-            encryptedId: encryptedId,
+            userId: encryptedId,
             ...userInfo?.dataValues
         }
     })

@@ -82,7 +82,7 @@ sequelize.define('UserProfile',{
 
     }
 },{
-    tableName: 'user_profile',
+    tableName: 'userprofile',
     timestamps:false
 }
 
