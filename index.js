@@ -18,7 +18,7 @@ const barangayRoutes = require("./routes/barangay-routes");
 const experienceRoutes = require("./routes/experience-routes");
 const userRoutes = require("./routes/user-routes");
 const path = require('path');
-const { loadMessages, sendMessage, uploadFiles } = require('./controller/socket-controller');
+
 
 const dashboardRoutes = require("./routes/dashboard-routes");
 
@@ -109,7 +109,7 @@ async function startServer(){
         //table will be created if it does not exist yet.
         await sequelize.sync()
 
-        app.listen(port,() =>{
+        server.listen(port,() =>{
             console.log(`Server running at  ${process.env.PORT}`);
         });
      
@@ -132,4 +132,4 @@ io.on('connection', (socket) => {
     });
 });
 
-startServer();
+
