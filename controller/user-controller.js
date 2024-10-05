@@ -180,10 +180,16 @@ const authenticationHandler = async(req,res,next)=>{
 const retrieveListUserDetails = async(req,res,next)=>{
 
     try{
-        const userType = req.user.userType === "senior" ? "assistant" : "senior";
+        const loggedinUser = await userProfile.findOne({
+            where:{
+                userId: req.user.userId
+            }
+        })
+
+        const userType = loggedinUser?.dataValues.userType;
         const userList = await userProfile.findAll({
             where: {
-                userType: "common"
+                userType: userType
             }
         })
 
@@ -192,15 +198,11 @@ const retrieveListUserDetails = async(req,res,next)=>{
             return val.dataValues;
         });
 
-    
-
         res.status(201).send({
             isSuccess:true,
             message: "Successfully retrieve users",
             data: await Promise.all(newList)
         })
-
-
     }catch(e){
         next(e)
     }
