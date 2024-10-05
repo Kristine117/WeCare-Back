@@ -3,11 +3,14 @@ const jwt = require('jsonwebtoken');
 const secret_key = "CourseBookingAPIB303";
 
 module.exports.createAccessToken= async (user)=>{	
-    const user_data ={
+    console.log(user)
+	const user_data ={
         userId:user.userId,
         email: user.email,
 		userType:user.userType
     }
+
+
     return jwt.sign(user_data, secret_key,{});
 }
 
