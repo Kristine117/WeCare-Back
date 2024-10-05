@@ -101,7 +101,8 @@ router.post('/upload', upload.array('files'), async (req, res) => {
 
         // Emit the new messages to all connected clients
         io.emit('newMessages', messages);
-        return res.json({ message: 'Files uploaded successfully', files: req.files.map(file => file.filename) });
+       // return res.json({ message: 'Files uploaded successfully', files: req.files.map(file => file.filename) });
+       return res.json(messages);
     }
     return res.status(400).send('No files uploaded');
 });
