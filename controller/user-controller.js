@@ -186,7 +186,9 @@ const retrieveListUserDetails = async(req,res,next)=>{
             }
         })
 
-        const userType = loggedinUser?.dataValues.userType;
+        const loggedinUserType = loggedinUser?.dataValues.userType;
+
+        const userType = loggedinUserType === 'senior' ? 'assistant': 'senior';
         const userList = await userProfile.findAll({
             where: {
                 userType: userType
