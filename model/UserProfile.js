@@ -5,7 +5,6 @@ const barangay = require('./Barangay')
 
 const UserProfile = 
 sequelize.define('UserProfile',{
-
     userId: {
         type: DataTypes.INTEGER,
         allowNull:false,
@@ -16,15 +15,22 @@ sequelize.define('UserProfile',{
     lastname :{
         type:DataTypes.STRING,
         allowNull : true,
-        
+        validate:{
+            len:{
+                max: 255,
+                msg:"Last Name length must have a maximum of 255 characters"
+            }
+        }
     },
 
     firstname :{
         type:DataTypes.STRING,
         allowNull : false,
-        isLengthValid(value){
-            if(value.length < 2 && value.length > 255){
-                throw new Error("First Name length must be between 2 - 255 characters")
+        validate:{
+            len:{
+                min:2,
+                max: 255,
+                msg:"First Name length must be between 2 - 255 characters"
             }
         }
     },
@@ -32,8 +38,17 @@ sequelize.define('UserProfile',{
     email:{
         type: DataTypes.STRING,
         allowNull : false,
-        unique:true
-
+        unique:true,
+        validate:{
+            len:{
+                min:10,
+                max: 255,
+                msg:"Email Address length is invalid."
+            },
+            isEmail:{
+                msg: "Invalid Email Format"
+            }
+        }
     },
 
     userType:{
@@ -59,6 +74,13 @@ sequelize.define('UserProfile',{
     contactNumber:{
         type: DataTypes.STRING,
         allowNull : false,
+        validate:{
+            len: {
+                min: 11,
+                max: 12,
+                 msg: "Phone Number must be between 11 - 12 characters"
+            }
+        }
     },
     gender:{
         type: DataTypes.STRING,

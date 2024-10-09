@@ -3,8 +3,11 @@ const userProfile = require("../model/UserProfile");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const auth = require("../auth/auth");
+const sequelize = require("../db/dbconnection");
 const { exportDecryptedData,exportEncryptedData } = require("../auth/secure");
 const addNewUserHandler =async(req,res,next)=>{
+
+    const t = await sequelize.transaction();
     try {
         const {lastname,firstname,
             email,userType, street,
@@ -14,26 +17,31 @@ const addNewUserHandler =async(req,res,next)=>{
     
         const encryptedPassword = await bcrypt.hash(password,saltRounds)
             
-        const newUserProfile = await userProfile.create({lastname:lastname,
+        const newUserProfile = await 
+        userProfile.create({lastname:lastname,
             firstname:firstname,email:email,userType:userType,
             street:street,barangayId:barangayId,contactNumber:contactNumber,
             gender:gender,birthDate:birthDate,experienceId:experienceId
-        });
+        },
+    { transaction: t });
 
-        const newUser = await user.create({
+        await user.create({
             userId: await newUserProfile.dataValues.userId,
             email:email,
             password:encryptedPassword
-        })
-    
+        },
+        { transaction: t })
+       
         res.status(200).send({
             isSuccess: true,
             message:"It worked well"
         })
-
+        await t.commit();
         req.session.data = null;
     }catch(e){
-       next(e)
+        
+       next(e);
+       await t.rollback();
     }
 
 }
