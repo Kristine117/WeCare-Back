@@ -1,23 +1,30 @@
 const { Op } = require('sequelize');
 const Message = require('../model/Message');
 const { exportDecryptedData, exportEncryptedData } = require('../auth/secure');
+const { Json } = require('sequelize/lib/utils');
 
 // Controller to handle retrieving messages
 exports.getMessages = async (req, res,next) => {
-    const { senderId, recipientId } = req.query;
+    const { senderId, recipientId } = JSON.parse(req.headers.chatids);
 
-    const recipientIddecrypted = Number(await exportDecryptedData(recipientId));
-    const senderIddecrypted = Number(await exportDecryptedData(senderId));
+    console.log(senderId,
+        recipientId
+        )
+    const recipientIddecrypted = Number(await exportDecryptedData(recipientId.trim()));
+    const senderIddecrypted = Number(await exportDecryptedData(senderId.trim()));
 
     try {
         let messages;
-        if (senderIddecrypted && recipientId) {
+        console.log("this is recipient")
+        console.log(recipientId);
+        console.log(senderId);
+        if (senderIddecrypted && recipientIddecrypted) {
             // Fetch messages from the database that match the sender and recipient
             messages = await Message.findAll({
                 where: {
                     [Op.or]: [
-                        { senderId: senderIddecrypted, recipientId: recipientId },
-                        { senderId: recipientId, recipientId: senderIddecrypted }
+                        { senderId: senderIddecrypted, recipientId: recipientIddecrypted },
+                        { senderId: recipientIddecrypted, recipientId: senderIddecrypted }
                     ]
                 },
                 order: [['date', 'ASC']], // Optional: Order by date
@@ -31,6 +38,11 @@ exports.getMessages = async (req, res,next) => {
         const updatedMessages = messages.map(async(msg)=>{
 
             msg.dataValues['isForReceiver'] = Number(senderIddecrypted) !== Number(msg.dataValues.senderId);
+            console.log("hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+            
+            console.log(senderIddecrypted);
+            console.log(msg.dataValues.senderId);
+            console.log(msg.dataValues.isForReceiver)
             msg.dataValues['senderId'] = await exportEncryptedData(String(msg.dataValues.senderId));
             msg.dataValues['recipientId'] = await exportEncryptedData(String(msg.dataValues.recipientId));
             return msg.dataValues;
@@ -63,7 +75,7 @@ exports.sendMessage = async (req, res, io) => {
 
         const message = await Message.create({
             senderId:senderIddecrypted,
-            recipientId,
+            recipientId:recipientIddecrypted,
             messageContent,
             contentType,
             date,
@@ -101,9 +113,9 @@ exports.uploadFiles = async (req, res, io) => {
 
                 const message = {
                     senderId: senderIddecrypted,
-                    recipientId: req.body.recipientId,
+                    recipientId: recipientIddecrypted,
                     messageContent: filePath,
-                    contentType: 'file',
+                    contentType: 'picture',
                     date,
                     time
                 };
