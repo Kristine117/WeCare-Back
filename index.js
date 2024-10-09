@@ -24,7 +24,7 @@ const experienceRoutes = require("./routes/experience-routes");
 const userRoutes = require("./routes/user-routes");
 const dashboardRoutes = require("./routes/dashboard-routes");
 const setupMessageRoutes = require("./routes/message-routes"); 
-
+const seniorRoutes = require("./routes/senior-routes");
 // Port
 const port = process.env.PORT || 4000;
 
@@ -53,7 +53,7 @@ app.use("/main", barangayRoutes);
 app.use("/main", experienceRoutes);
 app.use("/main", userRoutes);
 app.use("/dashboard", dashboardRoutes);
-
+app.use("/senior",seniorRoutes);
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
