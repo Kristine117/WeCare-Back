@@ -57,6 +57,11 @@ app.use("/senior",seniorRoutes);
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+app.get('/download/:filename', (req, res) => {
+    const file = path.join(__dirname, 'uploads', req.params.filename);
+    res.download(file);  // This forces the browser to download the image
+});
+
 // Create HTTP server
 const server = http.createServer(app);
 

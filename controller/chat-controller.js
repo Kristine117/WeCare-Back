@@ -94,7 +94,6 @@ exports.sendMessage = async (req, res, io) => {
     }
 };
 
-// Controller to handle file uploads
 exports.uploadFiles = async (req, res, io) => {
     if (req.files && req.files.length > 0) {
         const messages = [];
@@ -108,6 +107,14 @@ exports.uploadFiles = async (req, res, io) => {
                 const datePath = date.toISOString().split('T')[0]; // Date folder format
                 const filePath = `/uploads/${datePath}/${file.filename}`; // Path for file
 
+                // Determine if the file is an image or not
+                let contentType;
+                if (file.mimetype.startsWith('image/')) {
+                    contentType = 'picture'; // Set as 'picture' if it's an image
+                } else {
+                    contentType = 'file'; // Set as 'file' for non-image files
+                }
+
                 const recipientIddecrypted = Number(await exportDecryptedData(req.body.recipientId));
                 const senderIddecrypted = Number(await exportDecryptedData(req.body.senderId));
 
@@ -115,7 +122,7 @@ exports.uploadFiles = async (req, res, io) => {
                     senderId: senderIddecrypted,
                     recipientId: recipientIddecrypted,
                     messageContent: filePath,
-                    contentType: 'picture',
+                    contentType, // Save either 'picture' or 'file' based on file type
                     date,
                     time
                 };
