@@ -18,7 +18,7 @@ const findAssistantsForSenior = async(req,res,next)=>{
             and ()`,{
                 type: QueryTypes.SELECT
             }   
-        )
+        ) 
 
         res.status(201).send({
             isSuccess: true,
