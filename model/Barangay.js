@@ -10,7 +10,8 @@ const Barangay = sequlize.define('Barangay',{
     },
     barangay:{
         type:DataTypes.STRING,
-        allowNull:false
+        allowNull:false,
+        unique: true
     }
 
 },{

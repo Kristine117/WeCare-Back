@@ -1,14 +1,9 @@
 const express = require('express');
-const addNewBarangayFuncHandler = require('../controller/barangay-controller');
+const {addNewBarangayFuncHandler,getAllBarangays} = require('../controller/barangay-controller');
 const router = express.Router();
 
-router.post("/register-barangay",(req,res)=>{
-    const data = [
-        req.body.barangay
-    ]
-    const result = addNewBarangayFuncHandler(data);
-    return res.send(result);
-});
+router.post("/register-barangay",addNewBarangayFuncHandler);
 
+router.get("/registered-barangays",getAllBarangays);
 
 module.exports = router;
