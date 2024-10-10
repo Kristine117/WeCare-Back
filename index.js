@@ -49,9 +49,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/main", loginRoutes);
 app.use("/main", registerRoutes);
-app.use("/main", barangayRoutes);
-app.use("/main", experienceRoutes);
 app.use("/main", userRoutes);
+app.use("/experience", experienceRoutes);
+app.use("/barangay", barangayRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/senior",seniorRoutes);
 // Serve uploaded files
