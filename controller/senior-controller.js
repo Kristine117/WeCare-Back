@@ -6,7 +6,7 @@ const findAssistantsForSenior = async(req,res,next)=>{
 
     const {ratings,age,gender}=req.query;
 
-    try{
+    try{ 
         // const results = await User.belo
         
         const results = await sequelize.query(
