@@ -101,6 +101,10 @@ sequelize.define('UserProfile',{
           },
           defaultValue:0
 
+    },
+    profileImage:{
+        type: DataTypes.TEXT,
+        allowNull: false
     }
 },{
     tableName: 'userprofile',

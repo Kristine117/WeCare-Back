@@ -6,18 +6,19 @@ const findAssistantsForSenior = async(req,res,next)=>{
 
     const {ratings,age,gender}=req.query;
 
-    try{
-
+    try{ 
         // const results = await User.belo
         
         const results = await sequelize.query(
-            `select userid, email from User 
+            `select userid, email, from User 
             inner join Ratings 
             on userId = assistant_id
-            where rating_score > 0`,{
+            where userId > 0
+            and (gender  in (:genderList))
+            and ()`,{
                 type: QueryTypes.SELECT
             }   
-        )
+        ) 
 
         res.status(201).send({
             isSuccess: true,
