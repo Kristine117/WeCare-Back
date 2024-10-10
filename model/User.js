@@ -34,13 +34,12 @@ sequelize.define('User', {
         password:{
             type:DataTypes.STRING,
             allowNull:false,
-            validate:{
-                len:{
-                    min:8,
-                    max: 15,
-                    msg:"Password length must be between 8 - 15 characters"
-                }
-            }
+            // validate:{
+            //     len:{
+            //         max:255,
+            //         msg:"Password length must be between 8 - 15 characters"
+            //     }
+            // }
 
         }
     
