@@ -55,7 +55,7 @@ app.use("/experience", experienceRoutes);
 app.use("/barangay", barangayRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/senior",seniorRoutes);
-app.user("/payment",paymentRoutes);
+app.use("/payment",paymentRoutes);
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
