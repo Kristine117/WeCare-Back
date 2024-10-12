@@ -13,31 +13,39 @@ const addNewUserHandler =async(req,res,next)=>{
             email,userType, street,
             barangayId,
             contactNumber,gender,birthDate,
-            experienceId,password} = req.body;
+            experienceId,password,profileImage} = req.body;
     
         const encryptedPassword = await bcrypt.hash(password,saltRounds)
             
-        const newUserProfile = await 
-        userProfile.create({lastname:lastname,
-            firstname:firstname,email:email,userType:userType,
-            street:street,barangayId:barangayId,contactNumber:contactNumber,
-            gender:gender,birthDate:birthDate,experienceId:experienceId
-        },
-    { transaction: t });
-
-        await user.create({
-            userId: await newUserProfile.dataValues.userId,
-            email:email,
-            password:encryptedPassword
-        },
-        { transaction: t })
-       
-        res.status(200).send({
-            isSuccess: true,
-            message:"It worked well"
-        })
-        await t.commit();
-        req.session.data = null;
+            if(password?.length < 8 || password?.length > 26){
+                res.status(400).send({
+                    isSuccess: false,
+                    message: "Error with Password Length"
+                })
+            }else {
+            
+                const newUserProfile = await 
+                userProfile.create({lastname:lastname,
+                    firstname:firstname,email:email,userType:userType,
+                    street:street,barangayId:barangayId,contactNumber:contactNumber,
+                    gender:gender,birthDate:birthDate,experienceId:experienceId,
+                    profileImage:profileImage
+                    },
+                    { transaction: t });
+        
+                await user.create({
+                    userId: await newUserProfile.dataValues.userId,
+                    email:email,
+                    password:encryptedPassword
+                },
+                { transaction: t })
+               
+                res.status(200).send({
+                    isSuccess: true,
+                    message:"Successfully Registered New User"
+                })
+         
+            }
     }catch(e){
         
        next(e);
@@ -218,6 +226,20 @@ const retrieveListUserDetails = async(req,res,next)=>{
     }
 }
 
+const processProfile = async (req,res,next)=>{
+    try{
+        console.log("Request")
+        console.log(req.file);
+
+        res.status(201).send({
+            isSuccess: true,
+            message: "Kwan mn ni"
+        })
+    }catch(e){
+        next(e)
+    }
+}
+
 module.exports = {
     addNewUserHandler,
     grabSession,
@@ -225,5 +247,6 @@ module.exports = {
     authenticationHandler,
     getUserDataUsingAuthenticationToken,
     updateUserHandlerForProfile,
-    retrieveListUserDetails
+    retrieveListUserDetails,
+    processProfile
 }
