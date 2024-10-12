@@ -1,6 +1,8 @@
 const { DataTypes} = require('sequelize');
+
 const sequelize = require('../db/dbconnection')
 const User = require('./User')
+const ChatRoom = require('./ChatRoom')
 
 const Message = sequelize.define('Message',{
     messageId:{
@@ -29,7 +31,7 @@ const Message = sequelize.define('Message',{
     },
 
     messageContent:{
-        type:DataTypes.TEXT,
+        type:DataTypes.STRING,
         allowNull:false
     },
 
@@ -38,6 +40,14 @@ const Message = sequelize.define('Message',{
         allowNull:false
     },
 
+    roomId: {
+        type:DataTypes.UUID,
+        allowNull:false,
+        references:{
+            model:ChatRoom,
+            key: 'roomId'
+        }
+    },
 
     date:{
         type:DataTypes.DATE,
@@ -49,6 +59,7 @@ const Message = sequelize.define('Message',{
         type:DataTypes.TIME,
         allowNull:false
     }
+
 
 },{
     tableName: 'message',

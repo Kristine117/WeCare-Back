@@ -104,11 +104,13 @@ sequelize.define('UserProfile',{
     },
     profileImage:{
         type: DataTypes.TEXT,
-        allowNull: true
+        allowNull: true,
+        defaultValue: ""
     }
 },{
     tableName: 'userprofile',
     timestamps:false
+    
 }
 
 )

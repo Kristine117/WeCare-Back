@@ -9,6 +9,8 @@ const multer = require('multer');
 const app = express();
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
+const { exportDecryptedData, exportEncryptedData } = require('./auth/secure');
+const {sendMessage} = require('./controller/chat-controller');
 
 // Models
 const UserProfile = require('./model/UserProfile');
@@ -138,21 +140,43 @@ io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
     // Listen for sending messages (not needed anymore, handled in message routes)
-    socket.on('sendMessage', (message) => {
-        // Emit to all clients
-        io.emit('receiveMessage', message);
+    // socket.on('sendMessage', (message) => {
+    //     // Emit to all clients
+    //     io.emit('receiveMessage', message);
+    // });
+
+    // // Listen for new messages from uploads (not needed anymore, handled in message routes)
+    // socket.on('newMessage', (message) => {
+    //     // Emit to all clients
+    //     io.emit('receiveMessage', message);
+    // });
+    socket.on('joinRoom', ({ roomId, senderId }) => {
+        // Join the client to the specified room
+        socket.join(roomId);
+
+        console.log(`${senderId} joined room: ${roomId}`);
+
+        socket.on('disconnect', () => {
+            console.log('User disconnected:', socket.id);
+        });
     });
 
-    // Listen for new messages from uploads (not needed anymore, handled in message routes)
-    socket.on('newMessage', (message) => {
-        // Emit to all clients
-        io.emit('receiveMessage', message);
+     // Listen for the 'sendMessage' event from the client
+     socket.on('sendMessage', async (data) => {
+        console.log("sendMessage is triggerred")
+        // Call the sendMessage controller
+        await sendMessage(data, io);  
     });
+
+   
+
 
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
     });
 });
+
+
 
 
 startServer();
