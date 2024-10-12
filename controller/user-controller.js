@@ -17,40 +17,45 @@ const addNewUserHandler =async(req,res,next)=>{
     
         const encryptedPassword = await bcrypt.hash(password,saltRounds)
             
-            if(password?.length < 8 || password?.length > 26){
-                res.status(400).send({
-                    isSuccess: false,
-                    message: "Error with Password Length"
-                })
-            }else {
-            
+        if(password?.length < 8 || password?.length > 26){
+            res.status(400).send({
+                isSuccess: false,
+                message: "Error with Password Length"
+            })
+        }else {
+            const result = await sequelize.transaction(async t=>{
+
                 const newUserProfile = await 
-                userProfile.create({lastname:lastname,
-                    firstname:firstname,email:email,userType:userType,
-                    street:street,barangayId:barangayId,contactNumber:contactNumber,
-                    gender:gender,birthDate:birthDate,experienceId:experienceId,
-                    profileImage:profileImage
-                    },
-                    { transaction: t });
-        
-                await user.create({
-                    userId: await newUserProfile.dataValues.userId,
-                    email:email,
-                    password:encryptedPassword
+            userProfile.create({lastname:lastname,
+                firstname:firstname,email:email,userType:userType,
+                street:street,barangayId:barangayId,contactNumber:contactNumber,
+                gender:gender,birthDate:birthDate,experienceId:experienceId,
+                profileImage:profileImage
                 },
-                { transaction: t })
-               
-                res.status(200).send({
-                    isSuccess: true,
-                    message:"Successfully Registered New User"
-                })
-         
-            }
+                { transaction: t });
+    
+            await user.create({
+                userId: await newUserProfile.dataValues.userId,
+                email:email,
+                password:encryptedPassword
+            },
+            { transaction: t })
+
+            return newUserProfile;
+            })
+            
+            
+            res.status(200).send({
+                isSuccess: true,
+                message:"Successfully Registered New User"
+            })
+        
+        }
     }catch(e){
         
        next(e);
-       await t.rollback();
     }
+
 
 }
 
@@ -239,6 +244,7 @@ const processProfile = async (req,res,next)=>{
         next(e)
     }
 }
+
 
 module.exports = {
     addNewUserHandler,
