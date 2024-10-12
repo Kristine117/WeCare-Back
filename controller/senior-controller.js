@@ -1,5 +1,7 @@
 const UserProfile = require("../model/UserProfile");
 const Ratings = require("../model/Ratings");
+const Senior = require("../model/Senior");
+const Relationship = require("../model/Relationship");
 const {QueryTypes} = require("sequelize");
 const sequelize = require("../db/dbconnection");
 const { exportEncryptedData } = require("../auth/secure");
@@ -54,7 +56,58 @@ const getAssistantList = async(req,res,next)=>{
     }
 }
 
+const addSenior = async(req,res,next)=>{
+    const t = await sequelize.transaction();
+
+    try{
+        const { userId, seniorNumber, 
+            prescribeMeds, healthStatus, 
+            remarks } = req.body;
+
+            const result = await sequelize.transaction(async t=> {
+                const newSenior = await Senior.create({
+                    userId:userId,
+                    seniorNumber:seniorNumber,
+                    prescribeMeds:prescribeMeds,
+                    healthStatus:healthStatus,
+                    remarks:remarks
+                }, {transaction: t });
+
+                return newSenior;
+            })
+
+            res.status(200).send({
+                isSuccess:true,
+                message:"Successfully Registered New Senior"
+            })
+    } catch(e){
+        next(e);
+    }
+}
+
+// const addRelationship = async(req,res,next) => {
+//     const t = await sequelize.transaction();
+
+//     try{
+//         const {seniorId, name, age, relationship, civilstatus,
+//             occupation,contactNumber} = req.body;
+
+//         const result = await sequelize.transaction(async t=>{
+//             const newRelationShip = await Relationship.create({
+//                 seniorId:seniorId,
+//                 name:name,
+//                 age:age,
+//                 relationship:relationship,
+//                 civilstatus,
+//             },{
+
+//             })
+//         })
+//     }catch{}
+// }
+
 module.exports = {
     findAssistantsForSenior,
-    getAssistantList
+    getAssistantList,
+    addSenior
 }
