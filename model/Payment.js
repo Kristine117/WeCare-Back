@@ -1,6 +1,6 @@
 const {DataTypes} = require ('sequelize');
 const sequelize = require('../db/dbconnection');
-
+const Appointment = require("../model/Appointment");
 const Payment = 
 sequelize.define('Payment',{
     
@@ -15,6 +15,14 @@ sequelize.define('Payment',{
         type: DataTypes.STRING,
         allowNull:false, 
     },
+    appointmentId:{
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references:{
+            model: Appointment,
+            key: 'appointmentId'
+        }
+    }
 
 },{
     tableName: 'payment',

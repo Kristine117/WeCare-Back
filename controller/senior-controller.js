@@ -9,7 +9,7 @@ const findAssistantsForSenior = async(req,res,next)=>{
         // const results = await User.belo
         
         const results = await sequelize.query(
-            `select userid, email, from UserProfile 
+            `select userId, email, from UserProfile 
             inner join Ratings 
             on userId = assistant_id
             where userId > 0
