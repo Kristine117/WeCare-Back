@@ -12,7 +12,15 @@ sequelize.define('AppointmentRatings',{
         autoIncrement: true
     },
 
-    userId: {
+    seniorId: {
+        type: DataTypes.INTEGER,
+        allowNull:false,
+        references:{
+            model: UserProfile,
+            key:'userId'
+        }
+    },
+    assistantId: {
         type: DataTypes.INTEGER,
         allowNull:false,
         references:{
