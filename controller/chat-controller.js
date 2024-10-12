@@ -240,10 +240,10 @@ exports.uploadFiles = async (req, res, io) => {
  
                
                  savedMessage.dataValues['isForReceiver'] = true;
-                 io.to(roomIdReceiver).emit('receiveMessage',savedMessagea);
+                 io.to(roomIdReceiver).emit('receiveMessage',savedMessage);
  
             }
-            
+
         } catch (error) {
             console.error('Error sending message:', error);
             return { error: 'Error sending message' }; // Or throw the error
