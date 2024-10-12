@@ -9,32 +9,52 @@ const createAppointment = async(req,res,next)=>{
         serviceDate,
         startDate,
         endDate,
-        statusId,
-        paymentId,
         numberOfHours,
         totalAmount,
         serviceDescription
     } = req.body;
     
     try{
-        await Appointment.create({
-            userId:userId,
-            appointmentDate:appointmentDate,
-            serviceDate:serviceDate,
-            startDate:startDate,
-            endDate:endDate,
-            statusId: statusId,
-            paymentId:paymentId,
-            numberOfHours:numberOfHours,
-            totalAmount:totalAmount,
-            serviceDescription:serviceDescription
-        })
 
+        // const newStatus = await Status.create({
+        //     statusDescription: "0"
+        // })
+
+        const {userId} = req.user;
+        const appointmentId = req.body.assistantId;
+        console.log(userId);
+        console.log(appointmentId);
+        // await Appointment.create({
+        //     userId:userId,
+        //     appointmentDate:appointmentDate,
+        //     serviceDate:serviceDate,
+        //     startDate:startDate,
+        //     endDate:endDate,
+        //     statusId: newStatus.dataValues.statusId,
+        //     numberOfHours:numberOfHours,
+        //     totalAmount:totalAmount,
+        //     serviceDescription:serviceDescription
+        // })
+        res.status(201).send({
+            isSuccess: true,
+            message: "Successfully Created Appointment"
+        })
     }catch(e){
         next(e);
     }
 }
 
-module.export = {
-    createAppointment
+const updateAppointment = (req,res,next)=>{
+    try{
+
+        
+
+    }catch(e){
+        next(e)
+    }
+}
+
+module.exports = {
+    createAppointment,
+    updateAppointment
 }

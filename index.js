@@ -28,6 +28,7 @@ const dashboardRoutes = require("./routes/dashboard-routes");
 const setupMessageRoutes = require("./routes/message-routes"); 
 const seniorRoutes = require("./routes/senior-routes");
 const paymentRoutes = require("./routes/payment-routes");
+const appointmentRoutes = require("./routes/appointment-routes");
 // Port
 const port = process.env.PORT || 4000;
 
@@ -58,8 +59,10 @@ app.use("/barangay", barangayRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/senior",seniorRoutes);
 app.use("/payment",paymentRoutes);
-// Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/appointment",appointmentRoutes);
+
+// Serve uploaded files
 
 app.get('/download/:filename', (req, res) => {
     const file = path.join(__dirname, 'uploads', req.params.filename);
