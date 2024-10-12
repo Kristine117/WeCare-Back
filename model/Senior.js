@@ -1,43 +1,41 @@
-const {DataTypes} = require ('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../db/dbconnection');
-const HealthStatus = require('./HealthStatus');
-const Relationship = require('./Relationship');
 const userprofile = require('./UserProfile');
 
-const Senior = sequelize.define('Senior',{
-    seniorId:{
-        type:DataTypes.INTEGER,
-        allowNull:false,
-        primaryKey:true,
-        autoIncrement:true
+const Senior = sequelize.define('Senior', {
+    seniorId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true
     },
-    userId:{
-        type:DataTypes.INTEGER,
-        allowNull:false,
-        references:{
-            model:userprofile,
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: userprofile,
             key: 'userId'
-            }
+        }
     },
-    seniorNumber:{
-        type:DataTypes.STRING,
-        allowNull:false
+    seniorNumber: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
-    prescribeMeds:{
-        type:DataTypes.STRING,
-        allowNull:false
+    prescribeMeds: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
-    healthStatus:{
-        type:DataTypes.STRING,
-        allowNull:false
+    healthStatus: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
-    remarks:{
-        type:DataTypes.STRING,
-        allowNull:false
+    remarks: {
+        type: DataTypes.STRING,
+        allowNull: false
     }
-},{
-  tableName:'senior',
-  timestamps:false 
-}
-)
+}, {
+    tableName: 'senior',
+    timestamps: false
+});
+
 module.exports = Senior;

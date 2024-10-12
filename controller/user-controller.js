@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const auth = require("../auth/auth");
 const sequelize = require("../db/dbconnection");
+const senior = require("../model/Senior");
 const { exportDecryptedData,exportEncryptedData } = require("../auth/secure");
 const addNewUserHandler =async(req,res,next)=>{
 
@@ -13,7 +14,9 @@ const addNewUserHandler =async(req,res,next)=>{
             email,userType, street,
             barangayId,
             contactNumber,gender,birthDate,
-            experienceId,password,profileImage} = req.body;
+            experienceId,password,profileImage,
+            seniorNumber, prescribeMeds, healthStatus,
+            remarks} = req.body;
     
         const encryptedPassword = await bcrypt.hash(password,saltRounds)
             
@@ -40,6 +43,19 @@ const addNewUserHandler =async(req,res,next)=>{
                 password:encryptedPassword
             },
             { transaction: t })
+
+
+            if(userType == "senior"){
+                await senior.create({
+                    userId: await newUserProfile.dataValues.userId,
+                    seniorNumber:seniorNumber,
+                    prescribeMeds:prescribeMeds,
+                    healthStatus:healthStatus,
+                    remarks:remarks
+                }, 
+                { transaction: t })        
+                return newUserProfile;
+            } 
 
             return newUserProfile;
             })
