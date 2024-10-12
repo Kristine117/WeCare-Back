@@ -18,7 +18,14 @@ const setupMessageRoutes = (io) => {
         messageController.uploadFiles(req, res, io);  // io is passed to the controller
     });
 
+    
+    //Route for getting the messages
+    router.get('/room',messageController.retrieveRoomId)
+
+
     return router; // Return the router with all routes defined
 };
+
+
 
 module.exports = setupMessageRoutes;
