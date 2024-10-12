@@ -2,6 +2,7 @@ const UserProfile = require("../model/UserProfile");
 const Ratings = require("../model/Ratings");
 const {QueryTypes} = require("sequelize");
 const sequelize = require("../db/dbconnection");
+const { exportEncryptedData } = require("../auth/secure");
 const findAssistantsForSenior = async(req,res,next)=>{
     const {ratings,age,gender}=req.query;
     try{ 
@@ -31,15 +32,22 @@ const findAssistantsForSenior = async(req,res,next)=>{
 const getAssistantList = async(req,res,next)=>{
     try{
         const results = await sequelize.query(
-            'select userid, email from UserProfile where  userType = "assistant" ',{
+            'select userId, email, profileImage, concat_ws(" ",firstName,lastName) as fullName from UserProfile where  userType = "assistant" ',{
                 type: QueryTypes.SELECT
             }   
         ) 
 
+        const newResults = await results.map(async(val)=>{
+
+            val.userId = await exportEncryptedData(String(val.userId));
+
+            return val;
+        })
+
         res.status(201).send({
             isSuccess: true,
             message: "Successfully retrieve data",
-            data:results
+            data:await Promise.all(newResults)
         })
     }catch(e){
         next(e)
