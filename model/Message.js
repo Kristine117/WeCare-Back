@@ -58,6 +58,11 @@ const Message = sequelize.define('Message',{
     time:{
         type:DataTypes.TIME,
         allowNull:false
+    },
+    readFlag: {
+        type:DataTypes.BOOLEAN,
+        allowNull:false,
+        defaultValue:false
     }
 
 
