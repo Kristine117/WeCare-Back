@@ -65,6 +65,7 @@ const createAppointment = async(req,res,next)=>{
             message: "Successfully Created Appointment"
         })
     }catch(e){
+        await t.rollback();
         next(e);
     }
 }
