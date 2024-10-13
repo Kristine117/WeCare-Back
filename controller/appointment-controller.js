@@ -52,7 +52,7 @@ const createAppointment = async(req,res,next)=>{
                 endDate:endDate,
                 statusId: newStatus.dataValues.statusId,
                 numberOfHours:numberOfHours,
-                totalAmount: assistantRate * numberOfHours[0]['rate'],
+                totalAmount: assistantRate[0]['rate'] * numberOfHours,
                 serviceDescription:serviceDescription
             },{transaction: t})
 
