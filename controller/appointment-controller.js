@@ -5,7 +5,13 @@ const UserProfile = require("../model/UserProfile");
 const Experience = require("../model/Experience");
 const sequelize = require("../db/dbconnection");
 const { exportDecryptedData } = require("../auth/secure");
+    const { QueryTypes } = require("sequelize");
+
+
 const createAppointment = async(req,res,next)=>{
+    
+    const t = await sequelize.transaction();
+
     const {
         assistantId,
         appointmentDate,
@@ -18,35 +24,39 @@ const createAppointment = async(req,res,next)=>{
     
     try{
 
-        const newStatus = await Status.create({
-            statusDescription: "0"
-        })
-
         const decAssistantId = Number(await exportDecryptedData(assistantId));
 
-        const assistantRate = await sequelize.query(
-        `SELECT e.rate from Experience e 
-        inner join UserProfile f
-        on e.experienceId = f.experienceId
-        where f.userId = :userId`,{
-                replacements: { userId: decAssistantId },
-                type: QueryTypes.SELECT
-            }   
-        ) 
+        const result = await sequelize.transaction(async (t)=>{
+            const newStatus = await Status.create({
+                statusDescription: "0"
+            },{transaction: t})
+    
+            const assistantRate = await sequelize.query(
+            `SELECT e.rate from Experience e 
+            inner join UserProfile f
+            on e.experienceId = f.experienceId
+            where f.userId = :userId`,{
+                    replacements: { userId: decAssistantId },
+                    type: QueryTypes.SELECT
+                }   
+            ) 
+    
+            const {userId} = req.user;
+    
+            await Appointment.create({
+                seniorId: userId,
+                assistantId:decAssistantId,
+                appointmentDate:appointmentDate,
+                serviceDate:serviceDate,
+                startDate:startDate,
+                endDate:endDate,
+                statusId: newStatus.dataValues.statusId,
+                numberOfHours:numberOfHours,
+                totalAmount: assistantRate * numberOfHours,
+                serviceDescription:serviceDescription
+            },{transaction: t})
 
-        const {userId} = req.user;
-
-        await Appointment.create({
-            seniorId: userId,
-            assistantId:decAssistantId,
-            appointmentDate:appointmentDate,
-            serviceDate:serviceDate,
-            startDate:startDate,
-            endDate:endDate,
-            statusId: newStatus.dataValues.statusId,
-            numberOfHours:numberOfHours,
-            totalAmount: assistantRate * numberOfHours,
-            serviceDescription:serviceDescription
+            return newStatus;
         })
 
 
