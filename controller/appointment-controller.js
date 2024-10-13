@@ -4,7 +4,7 @@ const Payment = require("../model/Payment");
 
 const createAppointment = async(req,res,next)=>{
     const {
-        userId,
+        assistantId,
         appointmentDate,
         serviceDate,
         startDate,
@@ -16,25 +16,26 @@ const createAppointment = async(req,res,next)=>{
     
     try{
 
-        // const newStatus = await Status.create({
-        //     statusDescription: "0"
-        // })
+        const newStatus = await Status.create({
+            statusDescription: "0"
+        })
 
         const {userId} = req.user;
-        const appointmentId = req.body.assistantId;
-        console.log(userId);
-        console.log(appointmentId);
-        // await Appointment.create({
-        //     userId:userId,
-        //     appointmentDate:appointmentDate,
-        //     serviceDate:serviceDate,
-        //     startDate:startDate,
-        //     endDate:endDate,
-        //     statusId: newStatus.dataValues.statusId,
-        //     numberOfHours:numberOfHours,
-        //     totalAmount:totalAmount,
-        //     serviceDescription:serviceDescription
-        // })
+
+        await Appointment.create({
+            seniorId: userId,
+            assistantId:assistantId,
+            appointmentDate:appointmentDate,
+            serviceDate:serviceDate,
+            startDate:startDate,
+            endDate:endDate,
+            statusId: newStatus.dataValues.statusId,
+            numberOfHours:numberOfHours,
+            totalAmount:totalAmount,
+            serviceDescription:serviceDescription
+        })
+
+        
         res.status(201).send({
             isSuccess: true,
             message: "Successfully Created Appointment"
@@ -52,6 +53,10 @@ const updateAppointment = (req,res,next)=>{
     }catch(e){
         next(e)
     }
+}
+
+const getAppointment = ()=>{
+
 }
 
 module.exports = {
