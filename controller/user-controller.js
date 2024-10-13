@@ -256,22 +256,53 @@ const authenticationHandler = async(req,res,next)=>{
 }
 
 const retrieveListUserDetails = async(req,res,next)=>{
-
+    const {userId} = req.user;
     try{
         const loggedinUser = await userProfile.findOne({
             where:{
-                userId: req.user.userId
+                userId: userId
             }
         })
 
         const loggedinUserType = loggedinUser?.dataValues.userType;
 
         const userType = loggedinUserType === 'senior' ? 'assistant': 'senior';
-        const userList = await userProfile.findAll({
-            where: {
-                userType: userType
-            }
-        })
+        const userList = await sequelize.query(`
+            SELECT 
+                e.userId, 
+                e.profileImage, 
+                CONCAT_WS(" ", e.firstName, e.lastName) AS fullName,
+                f.messageContent, 
+                f.date, 
+                f.time, 
+                f.contentType,
+                f.readFlag
+            FROM 
+                collabproj.userprofile e
+            INNER JOIN 
+                collabproj.message f 
+                ON (e.userId = f.senderId OR e.userId = f.recipientId) 
+            INNER JOIN 
+                (SELECT 
+                    MAX(messageId) AS latestMessageId, 
+                    CASE 
+                        WHEN senderId = :loggedInUserId THEN recipientId 
+                        ELSE senderId 
+                    END AS otherUserId
+                FROM 
+                    collabproj.message 
+                WHERE 
+                    senderId = :loggedInUserId OR recipientId = :loggedInUserId 
+                GROUP BY 
+                    otherUserId  -- Group by the other user involved in the conversation
+                ) AS latestMessage 
+                ON (e.userId = latestMessage.otherUserId) 
+                AND f.messageId = latestMessage.latestMessageId
+            WHERE 
+                e.userType = :userType`,{
+                    replacements:{loggedinUserId: userId,userType: userType},
+                    type:QueryTypes.SELECT
+                })
 
         const newList = await userList.map(async(val)=>{
             val.dataValues['userId'] = await exportEncryptedData(String(val.dataValues.userId));
