@@ -63,6 +63,11 @@ sequelize.define('AppointmentRatings',{
     serviceDescription: {
         type:DataTypes.STRING,
         allowNull: true
+    },
+    readFlag: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
     }
 
 },{
