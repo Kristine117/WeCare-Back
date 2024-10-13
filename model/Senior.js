@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db/dbconnection');
 const userprofile = require('./UserProfile');
+const healthStatus = require('./HealthStatus');
 
 const Senior = sequelize.define('Senior', {
     seniorId: {
@@ -17,15 +18,19 @@ const Senior = sequelize.define('Senior', {
             key: 'userId'
         }
     },
+    healthStatusId:{
+        type:DataTypes.INTEGER,
+        allowNull:false,
+        references:{
+            model:healthStatus,
+            key:'healthStatusId'
+        }
+    },
     seniorNumber: {
         type: DataTypes.STRING,
         allowNull: false
     },
     prescribeMeds: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    healthStatus: {
         type: DataTypes.STRING,
         allowNull: false
     },
