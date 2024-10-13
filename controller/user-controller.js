@@ -229,17 +229,11 @@ const retrieveListUserDetails = async(req,res,next)=>{
         const loggedinUserType = loggedinUser?.dataValues.userType;
 
         const userType = loggedinUserType === 'senior' ? 'assistant': 'senior';
-        // const userList = await userProfile.findAll({
-        //     where: {
-        //         userType: userType
-        //     }
-        // })
-
-        const userList = await sequelize.query(`
-            select e.* from UserProfile
-        
-            `)
-
+        const userList = await userProfile.findAll({
+            where: {
+                userType: userType
+            }
+        })
         const newList = await userList.map(async(val)=>{
             val.dataValues['userId'] = await exportEncryptedData(String(val.dataValues.userId));
             return val.dataValues;
