@@ -11,7 +11,7 @@ const Relationship = sequelize.define('Relationship', {
     },
     seniorId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: Senior,
             key: 'seniorId'
@@ -19,27 +19,27 @@ const Relationship = sequelize.define('Relationship', {
     },
     name: {
         type: DataTypes.STRING,  // Correcting data type to STRING
-        allowNull: false,
+        allowNull: true,
     },
     age: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: true
     },
     relationship: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     civilstatus: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     occupation: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     contactNumber: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     }
 }, {
     tableName: 'relationship',
