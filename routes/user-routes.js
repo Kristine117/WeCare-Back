@@ -26,4 +26,6 @@ router.get("/user-list",auth.verify,retrieveListUserDetails);
 router.post("/user-profile",upload.single('profileImage'),processProfile);
 
 router.get("/assistant-details/:assistantId",auth.verify,getAssistantDetails)
+
+
 module.exports = router;
