@@ -172,23 +172,15 @@ exports.retrieveRoomId = async (req, res, next) => {
                 // Encrypt the senderId and recipientId
                 messageData.dataValues['senderId'] = await exportEncryptedData(String(messageData.dataValues.senderId));
                 messageData.dataValues['recipientId'] = await exportEncryptedData(String(messageData.dataValues.recipientId));
-               
-              // io.emit('receiveMessage', message);
-
-                //Emit the message to the sender's room
-                // io.to(roomIdSender).emit('receiveMessage', {
-                //     message: messageData,
-                //     isForReceiver: false, // Indicates message is from the sender's perspective
-                // });
-                console.group("room for sender"+roomIdSender)
+                 
+                messageData.dataValues['isForReceiver'] = false;
                 io.to(roomIdSender).emit('receiveMessage',messageData);
 
-                // Emit the message to the receiver's room
-                // io.to(roomIdReceiver).emit('receiveMessage', {
-                //     message: messageData,
-                //     isForReceiver: true, // Indicates message is from the receiver's perspective
-                // });
+              
+                messageData.dataValues['isForReceiver'] = true;
                 io.to(roomIdReceiver).emit('receiveMessage',messageData);
+
+
             } catch (error) {
                 console.error('Error sending message:', error);
                 return { error: 'Error sending message' }; // Or throw the error
@@ -206,6 +198,7 @@ exports.uploadFiles = async (req, res, io) => {
         const { chatroomSenderReceiver, chatroomReceiverSender } = await retrieveOrCreateChatRoom(req.body.senderId,req.body.recipientId);
         const roomIdSender = chatroomSenderReceiver.dataValues.roomId
         const roomIdReceiver =chatroomReceiverSender.dataValues.roomId
+
         try {
             for (const file of req.files) {
                 const currentDate = new Date();
@@ -224,8 +217,6 @@ exports.uploadFiles = async (req, res, io) => {
                     contentType = 'file'; // Set as 'file' for non-image files
                 }
 
-                
-
                 const message = {
                     senderId: senderIddecrypted,
                     recipientId: recipientIddecrypted,
@@ -238,13 +229,24 @@ exports.uploadFiles = async (req, res, io) => {
 
                 const savedMessage = await Message.create(message);
                 messages.push(savedMessage);
+
+
+                 // Encrypt the senderId and recipientId
+                 savedMessage.dataValues['senderId'] = await exportEncryptedData(String(savedMessage.dataValues.senderId));
+                 savedMessage.dataValues['recipientId'] = await exportEncryptedData(String(savedMessage.dataValues.recipientId));
+                  
+                 savedMessage.dataValues['isForReceiver'] = false;
+                 io.to(roomIdSender).emit('receiveMessage',savedMessage);
+ 
+               
+                 savedMessage.dataValues['isForReceiver'] = true;
+                 io.to(roomIdReceiver).emit('receiveMessage',savedMessage);
+ 
             }
 
-            io.emit('newMessages', messages); // Emit the messages to clients
-            return res.json(messages);
         } catch (error) {
-            console.error('Error uploading files:', error);
-            return res.status(500).json({ error: 'Error uploading files' });
+            console.error('Error sending message:', error);
+            return { error: 'Error sending message' }; // Or throw the error
         }
     } else {
         return res.status(400).send('No files uploaded');
