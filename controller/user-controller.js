@@ -90,7 +90,7 @@ const addNewUserHandler =async(req,res,next)=>{
                         civilstatus: rel.civilstatus || null,
                         occupation: rel.occupation || null,
                         contactNumber: rel.contactNumber || null,
-                        seniorId: rel.seniorId
+                        seniorId: newSenior.dataValues.seniorId
                     }));
 
                     // Bulk create relationships
@@ -318,11 +318,7 @@ const getAssistantDetails = async(req,res,next)=>{
             val["userId"] = assistantId;
 
             return val;
-        })
-
-
-
-        
+        })        
 
         res.status(201).send({
             isSuccess: true,
@@ -336,6 +332,27 @@ const getAssistantDetails = async(req,res,next)=>{
 }
 
 
+
+// Function to fetch all user emails
+async function fetchAllEmails(req, res, next) {
+    try {
+      // Use Sequelize's `findAll` method to get all user emails
+      const users = await user.findAll({
+        attributes: ['email'], // Select only the email field
+      });
+      
+      // Map the results to extract only the emails
+      const emails = users.map(user => user.email);
+      
+      // Send the emails as a response
+      res.status(200).json(emails);
+      
+    } catch (error) {
+        next(error); // Corrected error handling
+    }
+}
+
+
 module.exports = {
     addNewUserHandler,
     grabSession,
@@ -345,5 +362,6 @@ module.exports = {
     updateUserHandlerForProfile,
     retrieveListUserDetails,
     processProfile,
-    getAssistantDetails
+    getAssistantDetails,
+    fetchAllEmails
 }

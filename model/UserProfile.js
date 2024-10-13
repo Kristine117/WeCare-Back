@@ -109,8 +109,7 @@ sequelize.define('UserProfile',{
     }
 },{
     tableName: 'userprofile',
-    timestamps:false
-    
+    timestamps:false    
 }
 
 )
