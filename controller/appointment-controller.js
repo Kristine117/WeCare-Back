@@ -4,6 +4,7 @@ const Payment = require("../model/Payment");
 const UserProfile = require("../model/UserProfile");
 const Experience = require("../model/Experience");
 const sequelize = require("../db/dbconnection");
+const { exportDecryptedData } = require("../auth/secure");
 const createAppointment = async(req,res,next)=>{
     const {
         assistantId,
@@ -21,12 +22,14 @@ const createAppointment = async(req,res,next)=>{
             statusDescription: "0"
         })
 
+        const decAssistantId = Number(await exportDecryptedData(assistantId));
+
         const assistantRate = await sequelize.query(
         `SELECT e.rate from Experience e 
         inner join UserProfile f
         on e.experienceId = f.experienceId
         where f.userId = :userId`,{
-                replacements: { userId: assistantId },
+                replacements: { userId: decAssistantId },
                 type: QueryTypes.SELECT
             }   
         ) 
@@ -35,7 +38,7 @@ const createAppointment = async(req,res,next)=>{
 
         await Appointment.create({
             seniorId: userId,
-            assistantId:assistantId,
+            assistantId:decAssistantId,
             appointmentDate:appointmentDate,
             serviceDate:serviceDate,
             startDate:startDate,
