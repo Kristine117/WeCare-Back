@@ -13,7 +13,8 @@ const upload = multer({ storage: storage })
 const express = require('express');
 const auth = require("../auth/auth");
 const { getUserDataUsingAuthenticationToken,
-    updateUserHandlerForProfile,retrieveListUserDetails,processProfile } = require('../controller/user-controller');
+    updateUserHandlerForProfile,retrieveListUserDetails,processProfile,
+  getAssistantDetails } = require('../controller/user-controller');
 const router = express.Router();
 
 router.get("/user-profile",auth.verify,getUserDataUsingAuthenticationToken);
@@ -24,4 +25,5 @@ router.get("/user-list",auth.verify,retrieveListUserDetails);
 
 router.post("/user-profile",upload.single('profileImage'),processProfile);
 
+router.get("/assistant-details/:assistantId",auth.verify,getAssistantDetails)
 module.exports = router;
