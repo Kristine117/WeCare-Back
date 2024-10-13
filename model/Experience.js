@@ -21,6 +21,11 @@ sequelize.define('Experience',{
         allowNull:false, 
     },
 
+    rate: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    }
+
 },{
     tableName: 'experience',
     timestamps:false
