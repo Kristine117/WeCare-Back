@@ -6,6 +6,9 @@ const auth = require("../auth/auth");
 const sequelize = require("../db/dbconnection");
 const senior = require("../model/Senior");
 const { exportDecryptedData,exportEncryptedData } = require("../auth/secure");
+const { QueryTypes } = require("sequelize");
+
+
 const addNewUserHandler =async(req,res,next)=>{
 
     const t = await sequelize.transaction();
@@ -261,6 +264,39 @@ const processProfile = async (req,res,next)=>{
     }
 }
 
+const getAssistantDetails = async(req,res,next)=>{
+    try{
+        const {assistantId} = req.params;
+        const assistantIdDec = await exportDecryptedData(assistantId);
+
+        const results = await sequelize.query(
+            'select userId, email, profileImage, concat_ws(" ",firstName,lastName) as fullName from UserProfile where userId = :userId ',{
+                type: QueryTypes.SELECT,
+                replacements: { userId: Number(assistantIdDec) },
+            }   
+        )
+
+        const newResults = results.map(val=>{
+            val["userId"] = assistantId;
+
+            return val;
+        })
+
+
+
+        
+
+        res.status(201).send({
+            isSuccess: true,
+            message: "Successfully retrieved Assistant Details",
+            data:{...newResults[0]}
+        })
+
+    }catch(e){
+        next(e)
+    }
+}
+
 
 module.exports = {
     addNewUserHandler,
@@ -270,5 +306,6 @@ module.exports = {
     getUserDataUsingAuthenticationToken,
     updateUserHandlerForProfile,
     retrieveListUserDetails,
-    processProfile
+    processProfile,
+    getAssistantDetails
 }
