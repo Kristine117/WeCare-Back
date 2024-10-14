@@ -280,12 +280,11 @@ const retrieveListUserDetails = async(req,res,next)=>{
                 f.time, 
                 f.contentType,
                 f.readFlag
-            FROM 
-                collabproj.userprofile e
-            INNER JOIN 
-                collabproj.message f 
+            FROM UserProfile e
+            Left JOIN 
+                Message f 
                 ON (e.userId = f.senderId OR e.userId = f.recipientId) 
-            INNER JOIN 
+            Left JOIN 
                 (SELECT 
                     MAX(messageId) AS latestMessageId, 
                     CASE 
@@ -293,7 +292,7 @@ const retrieveListUserDetails = async(req,res,next)=>{
                         ELSE senderId 
                     END AS otherUserId
                 FROM 
-                    collabproj.message 
+                    Message 
                 WHERE 
                     senderId = :loggedInUserId OR recipientId = :loggedInUserId 
                 GROUP BY 
@@ -308,8 +307,9 @@ const retrieveListUserDetails = async(req,res,next)=>{
                 })
 
         const newList = await userList.map(async(val)=>{
-            val.dataValues['userId'] = await exportEncryptedData(String(val.dataValues.userId));
-            return val.dataValues;
+          
+            val['userId'] = await exportEncryptedData(String(val.userId));
+            return val;
         });
 
         res.status(201).send({
