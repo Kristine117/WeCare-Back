@@ -266,7 +266,10 @@ const retrieveListUserDetails = async(req,res,next)=>{
 
         const loggedinUserType = loggedinUser?.dataValues.userType;
 
+
         const userType = loggedinUserType === 'senior' ? 'assistant': 'senior';
+        console.log("type:"+userType);
+        console.log("userId:"+ userId);
         const userList = await sequelize.query(`
             SELECT 
                 e.userId, 
@@ -300,7 +303,7 @@ const retrieveListUserDetails = async(req,res,next)=>{
                 AND f.messageId = latestMessage.latestMessageId
             WHERE 
                 e.userType = :userType`,{
-                    replacements:{loggedinUserId: userId,userType: userType},
+                    replacements:{loggedInUserId: userId,userType: userType},
                     type:QueryTypes.SELECT
                 })
 
