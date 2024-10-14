@@ -341,6 +341,7 @@ const getAssistantDetails = async(req,res,next)=>{
         const {assistantId} = req.params;
         const assistantIdDec = await exportDecryptedData(assistantId);
 
+        console.log(assistantIdDec)
         const results = await sequelize.query(
             'select userId, email, profileImage, concat_ws(" ",firstName,lastName) as fullName from UserProfile where userId = :userId ',{
                 type: QueryTypes.SELECT,
