@@ -13,7 +13,7 @@ sequelize.define('Status',{
     },
     statusDescription: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: false
     }
 },{
     tableName: 'status',

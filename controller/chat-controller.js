@@ -60,8 +60,8 @@ exports.retrieveRoomId = async (req, res, next) => {
     const { senderId, recipientId } = JSON.parse(req.headers.chatids);
     console.log(recipientId)
     console.log(senderId)
-    const recipientIddecrypted = Number(await exportDecryptedData(recipientId.trim()));
-    const senderIddecrypted = Number(await exportDecryptedData(senderId.trim()));
+    const recipientIddecrypted = Number(await exportDecryptedData(recipientId?.trim()));
+    const senderIddecrypted = Number(await exportDecryptedData(senderId?.trim()));
 
     try {
         // Check if the sender-receiver chat room exists

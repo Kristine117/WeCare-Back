@@ -82,22 +82,20 @@ const updateAppointment = (req,res,next)=>{
 
 const getAppointmentList = async(req,res,next)=>{
     try{
-        const {userId} = req.body;
-
+        const {userId} = req.user;
+        console.log(userId)
         const appointmentList = await sequelize.query(
-            `select e.appointmentId,e.totalAmount,e.numberOfHours,
+            `select distinct e.appointmentId, e.totalAmount,e.numberOfHours,
             g.statusDescription from Appointment e
             inner join UserProfile f
-            on e.seniorId = :userId
+            on e.seniorId = :kwanId
             inner join Status g
             on e.statusId = g.statusId
             `,{
-                replacements: { userId: userId },
+                replacements: { kwanId: userId },
                 type: QueryTypes.SELECT
             }
         )
-
-        
         res.status(201).send({
             isSuccess: true,
             message: "Successfully Retrieve Appointment List",
