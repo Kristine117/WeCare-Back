@@ -2,8 +2,8 @@ const Experience = require("../model/Experience");
 const addNewExperienceHandler=async(req,res,next)=>{
 
     try{
-        const {numOfYears,experienceDescription } = req.body;
-        await Experience.create({numOfYears,experienceDescription});
+        const {numOfYears,experienceDescription,rate } = req.body;
+        await Experience.create({numOfYears,experienceDescription,rate});
 
         res.status(200).send({
             isSuccess: true,
