@@ -45,7 +45,7 @@ const options = {
 // CORS Configuration
 app.use(cors({
     origin: 'http://localhost:3000', 
-    methods: ['GET', 'POST'],         
+    methods: ['GET', 'POST','PUT'],         
     credentials: true                
 }));
 
@@ -160,7 +160,10 @@ io.on('connection', (socket) => {
         console.log("sendMessage is triggerred")
         // Call the sendMessage controller
         await sendMessage(data, io);  
+        // Emit an event to notify others in the room to fetch new messages
+       
     });
+
 
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);

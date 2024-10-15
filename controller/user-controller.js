@@ -279,7 +279,10 @@ const retrieveListUserDetails = async(req,res,next)=>{
                 f.date, 
                 f.date, 
                 f.contentType,
-                f.readFlag
+                f.readFlag,
+                f.contentType,
+                f.senderId,
+                f.messageId
             FROM 
                 collabproj.userProfile e
             LEFT JOIN 
@@ -301,7 +304,9 @@ const retrieveListUserDetails = async(req,res,next)=>{
                 collabproj.message f 
                 ON f.messageId = latestMessage.latestMessageId 
             WHERE 
-                e.userType = :userType `,{
+                e.userType = :userType
+                ORDER BY 
+            f.date DESC `,{
                     replacements:{loggedInUserId: userId,userType: userType},
                     type:QueryTypes.SELECT
                 })
@@ -309,6 +314,7 @@ const retrieveListUserDetails = async(req,res,next)=>{
         const newList = await userList.map(async(val)=>{
           
             val['userId'] = await exportEncryptedData(String(val.userId));
+            val['isFromLoggedInUser'] = Number(val.senderId) === Number(userId);
             return val;
         });
 

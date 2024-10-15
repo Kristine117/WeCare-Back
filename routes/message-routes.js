@@ -18,6 +18,11 @@ const setupMessageRoutes = (io) => {
         messageController.uploadFiles(req, res, io);  // io is passed to the controller
     });
 
+    //Route to Update readFlg
+    router.put('/updateReadFlg',(req,res)=>{
+        messageController.updateMessageReadFlg(req,res)
+    })
+
     
     //Route for getting the messages
     router.get('/room',messageController.retrieveRoomId)
