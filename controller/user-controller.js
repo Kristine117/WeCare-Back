@@ -277,14 +277,12 @@ const retrieveListUserDetails = async(req,res,next)=>{
                 CONCAT_WS(" ", e.firstName, e.lastName) AS fullName,
                 f.messageContent, 
                 f.date, 
-                f.time, 
+                f.date, 
                 f.contentType,
                 f.readFlag
-            FROM UserProfile e
-            Left JOIN 
-                Message f 
-                ON (e.userId = f.senderId OR e.userId = f.recipientId) 
-            Left JOIN 
+            FROM 
+                collabproj.userProfile e
+            LEFT JOIN 
                 (SELECT 
                     MAX(messageId) AS latestMessageId, 
                     CASE 
@@ -292,16 +290,18 @@ const retrieveListUserDetails = async(req,res,next)=>{
                         ELSE senderId 
                     END AS otherUserId
                 FROM 
-                    Message 
+                    collabproj.message
                 WHERE 
-                    senderId = :loggedInUserId OR recipientId = :loggedInUserId 
+                    senderId = :loggedInUserId OR recipientId = :loggedInUserId  
                 GROUP BY 
-                    otherUserId  -- Group by the other user involved in the conversation
+                    otherUserId  
                 ) AS latestMessage 
-                ON (e.userId = latestMessage.otherUserId) 
-                AND f.messageId = latestMessage.latestMessageId
+                ON e.userId = latestMessage.otherUserId  
+            LEFT JOIN 
+                collabproj.message f 
+                ON f.messageId = latestMessage.latestMessageId 
             WHERE 
-                e.userType = :userType`,{
+                e.userType = :userType `,{
                     replacements:{loggedInUserId: userId,userType: userType},
                     type:QueryTypes.SELECT
                 })
