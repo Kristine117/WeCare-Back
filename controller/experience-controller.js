@@ -10,7 +10,7 @@ const addNewExperienceHandler=async(req,res,next)=>{
             message: "Successfully Registered Experience"
         })
     }catch(e){
-        next(e);
+        next(e);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
     }
 } 
 
