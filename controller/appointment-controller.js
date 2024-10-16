@@ -4,7 +4,7 @@ const Payment = require("../model/Payment");
 const UserProfile = require("../model/UserProfile");
 const Experience = require("../model/Experience");
 const sequelize = require("../db/dbconnection");
-const { exportDecryptedData } = require("../auth/secure");
+const { exportDecryptedData, exportEncryptedData } = require("../auth/secure");
     const { QueryTypes } = require("sequelize");
 
 
@@ -78,15 +78,22 @@ const updateAppointment = (req,res,next)=>{
     }catch(e){
         next(e)
     }
-}
+}   
 
 const getAppointmentList = async(req,res,next)=>{
     try{
         const {userId} = req.user;
-        console.log(userId)
         const appointmentList = await sequelize.query(
-            `select distinct e.appointmentId, e.totalAmount,e.numberOfHours,
-            g.statusDescription from Appointment e
+            `select distinct e.appointmentId,e.assistantId, 
+            e.totalAmount,e.serviceDescription,
+            e.numberOfHours, g.statusDescription,
+            (select concat_ws(" ",ef.firstName, ef.lastName) 
+            from UserProfile ef
+            where ef.userId = e.assistantId) as assistantName,
+            (select ef.profileImage 
+            from UserProfile ef
+            where ef.userId = e.assistantId) as assistantProfileImage
+            from Appointment e
             inner join UserProfile f
             on e.seniorId = :kwanId
             inner join Status g
@@ -96,10 +103,16 @@ const getAppointmentList = async(req,res,next)=>{
                 type: QueryTypes.SELECT
             }
         )
+
+        const newAppointmentList = appointmentList.map(async(val)=>{
+            val["appointmentId"] = await exportEncryptedData(String(val.appointmentId));
+            val["assistantId"] = await exportEncryptedData(String(val.assistantId));
+            return val;
+        })
         res.status(201).send({
             isSuccess: true,
             message: "Successfully Retrieve Appointment List",
-            data: appointmentList
+            data: await Promise.all(newAppointmentList)
         })
     }catch(e){
         next(e)
