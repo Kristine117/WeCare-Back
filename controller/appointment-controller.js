@@ -70,10 +70,21 @@ const createAppointment = async(req,res,next)=>{
     }
 }
 
-const updateAppointment = (req,res,next)=>{
-    try{
+const updateAppointment = async(req,res,next)=>{
 
-        
+    
+    try{
+        const {result}= req.body
+    const {appId} =await req.params;
+    const servingname = req.headers?.servingname;
+    
+    console.log(appId)
+    const resultParsed = result === 'accept'? "Accepted": "Rejected";
+
+        res.status(200).send({
+            isSuccess: true,
+            message: `Successfully ${resultParsed} Appointment With ${servingname}`
+        })
 
     }catch(e){
         next(e)
@@ -83,30 +94,57 @@ const updateAppointment = (req,res,next)=>{
 const getAppointmentList = async(req,res,next)=>{
     try{
         const {userId} = req.user;
+        const loggedinUser = await UserProfile.findOne({
+            where:{
+                userId: userId
+            }
+        });
+
+        const userType =  loggedinUser?.dataValues.userType;
+
         const appointmentList = await sequelize.query(
-            `select distinct e.appointmentId,e.assistantId, 
+            `select distinct e.appointmentId, 
             e.totalAmount,e.serviceDescription,
             e.numberOfHours, g.statusDescription,
-            (select concat_ws(" ",ef.firstName, ef.lastName) 
-            from UserProfile ef
-            where ef.userId = e.assistantId) as assistantName,
-            (select ef.profileImage 
-            from UserProfile ef
-            where ef.userId = e.assistantId) as assistantProfileImage
+            (select h.userType from UserProfile h
+            where h.userId = :kwanId) as loggedInUserType,
+            case 
+                when 'senior' = :kwanType then
+                (select concat_ws(" ",ef.firstName, ef.lastName) 
+                from UserProfile ef
+                where ef.userId = e.assistantId)
+                else (select concat_ws(" ",ef.firstName, ef.lastName) 
+                from UserProfile ef
+                where ef.userId = e.seniorId) 
+            end as servingName,
+            case 
+                when 'senior' = :kwanType then
+                  (select ef.profileImage 
+                    from UserProfile ef
+                    where ef.userId = e.assistantId)
+                else (select ef.profileImage 
+                from UserProfile ef
+                where ef.userId = e.seniorId) 
+            end as servingProfileImage,
+            case 
+                when 'senior' = :kwanType then e.assistantId
+                else e.seniorId
+            end as servingProfileId
             from Appointment e
             inner join UserProfile f
-            on e.seniorId = :kwanId
+              ON (('senior' = :kwanType AND e.seniorId = :kwanId)
+            OR ('senior' != :kwanType AND e.assistantId = :kwanId))
             inner join Status g
             on e.statusId = g.statusId
             `,{
-                replacements: { kwanId: userId },
+                replacements: { kwanId: userId,kwanType:userType },
                 type: QueryTypes.SELECT
             }
         )
 
         const newAppointmentList = appointmentList.map(async(val)=>{
             val["appointmentId"] = await exportEncryptedData(String(val.appointmentId));
-            val["assistantId"] = await exportEncryptedData(String(val.assistantId));
+            val["servingProfileId"] = await exportEncryptedData(String(val.assistantId));
             return val;
         })
         res.status(201).send({
