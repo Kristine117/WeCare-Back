@@ -77,8 +77,8 @@ const updateAppointment = async(req,res,next)=>{
         const {result}= req.body;
   
         // const {appId} = req.params;
-        // const appointmentId = Number(await exportDecryptedData(appId));
         const servingname = req.headers?.servingname;
+        // const appointmentId = Number(await exportDecryptedData(appId));
     
         const resultParsed = result === 'accept'? "Accepted": "Rejected";
 
