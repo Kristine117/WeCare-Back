@@ -103,13 +103,13 @@ sessionStore.onReady().then(() => {
 
 
 app.use((err,req,res,next)=>{
-    console.log(err)
+   
     if(err){
         res.status(500).send({
             isSuccess: false,
             message: err.message
         })
-
+        
     }    
 })
 
