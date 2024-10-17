@@ -5,7 +5,7 @@ const UserProfile = require("../model/UserProfile");
 const Experience = require("../model/Experience");
 const sequelize = require("../db/dbconnection");
 const { exportDecryptedData, exportEncryptedData } = require("../auth/secure");
-    const { QueryTypes } = require("sequelize");
+    const { QueryTypes, where } = require("sequelize");
 
 
 const createAppointment = async(req,res,next)=>{
@@ -72,21 +72,37 @@ const createAppointment = async(req,res,next)=>{
 
 const updateAppointment = async(req,res,next)=>{
 
-    
     try{
-        const {result}= req.body
-    const {appId} =await req.params;
-    const servingname = req.headers?.servingname;
-    
-    console.log(appId)
-    const resultParsed = result === 'accept'? "Accepted": "Rejected";
 
+        const {result}= req.body;
+  
+        // const {appId} = req.params;
+        // const appointmentId = Number(await exportDecryptedData(appId));
+        const servingname = req.headers?.servingname;
+    
+        const resultParsed = result === 'accept'? "Accepted": "Rejected";
+
+
+        // const appointment = await Appointment.findOne({
+        //     where: {
+        //         appointmentId: appointmentId
+        //     }
+        // })
+        // const statusId = appointment.dataValues?.statusId
+        // const resultFromAssistant = result === "accept"? "1":"3";
+        // await Status.update(
+        //     {statusDescription: resultFromAssistant},
+        //     {where: {
+        //         statusId: statusId
+        //     }   }
+        // )
         res.status(200).send({
             isSuccess: true,
             message: `Successfully ${resultParsed} Appointment With ${servingname}`
         })
 
     }catch(e){
+        console.log(e.message);
         next(e)
     }
 }   
@@ -99,6 +115,8 @@ const getAppointmentList = async(req,res,next)=>{
                 userId: userId
             }
         });
+
+        const statusDescription = createStatusList(req.headers?.status);
 
         const userType =  loggedinUser?.dataValues.userType;
 
@@ -136,8 +154,10 @@ const getAppointmentList = async(req,res,next)=>{
             OR ('senior' != :kwanType AND e.assistantId = :kwanId))
             inner join Status g
             on e.statusId = g.statusId
+            where g.statusDescription in (:statusDescription)
             `,{
-                replacements: { kwanId: userId,kwanType:userType },
+                replacements: { kwanId: userId,
+                    kwanType:userType,statusDescription: statusDescription},
                 type: QueryTypes.SELECT
             }
         )
@@ -155,6 +175,21 @@ const getAppointmentList = async(req,res,next)=>{
     }catch(e){
         next(e)
     }
+}
+
+function createStatusList(value){
+    const statusList = [];
+    switch(value){
+        case "ongoing":
+            statusList.push("0");
+            break;
+        default:
+            statusList.push("1");
+            statusList.push("2");
+            break;
+    }
+
+    return statusList;
 }
 
 module.exports = {
