@@ -12,6 +12,7 @@ const { QueryTypes } = require("sequelize");
 
 
 const addNewUserHandler = async (req, res, next) => {
+
     const t = await sequelize.transaction();
     try {
       const {
@@ -20,10 +21,10 @@ const addNewUserHandler = async (req, res, next) => {
         experienceId, password, seniorNumber, prescribeMeds, 
         healthStatus, remarks, relationships
       } = req.body;
-  
+
       // Get the uploaded file
-      const profileImage = req.file ? `/uploads/${req.file.filename}` : null; // Save file path
-  
+      const profileImage = req.file ? `/profilePictures/${req.file.filename}` : null;
+
       // Encrypt password
       const encryptedPassword = await bcrypt.hash(password, saltRounds);
   
@@ -77,13 +78,12 @@ const addNewUserHandler = async (req, res, next) => {
           }, { transaction: t });
   
           // Handle relationships if provided
-          if (relationships && relationships.length > 0) {
+          if (Array.isArray(relationships) && relationships.length > 0) {
             const relationshipsWithSeniorId = relationships.map(rel => ({
               ...rel,
               seniorId: newSenior.dataValues.seniorId
             }));
-  
-            // Ensure empty fields are handled properly
+          
             const sanitizedRelationships = relationshipsWithSeniorId.map(rel => ({
               name: rel.name || null,
               age: rel.age || null,
@@ -93,10 +93,10 @@ const addNewUserHandler = async (req, res, next) => {
               contactNumber: rel.contactNumber || null,
               seniorId: newSenior.dataValues.seniorId
             }));
-  
-            // Bulk create relationships
+          
             await relationship.bulkCreate(sanitizedRelationships, { transaction: t, validate: true });
           }
+          
         }
   
         return newUserProfile;
