@@ -11,106 +11,108 @@ const healthStatusModel = require("../model/HealthStatus");
 const { QueryTypes } = require("sequelize");
 
 
-const addNewUserHandler =async(req,res,next)=>{
+const addNewUserHandler = async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-        const {
-            lastname, firstname, email, userType, street,
-            barangayId, contactNumber, gender, birthDate,
-            experienceId, password, profileImage,
-            seniorNumber, prescribeMeds, healthStatus,
-            remarks, relationships
-        } = req.body;
-
-        // Encrypting password
-        const encryptedPassword = await bcrypt.hash(password, saltRounds);
-
-        // Validate password length
-        if (password?.length < 8 || password?.length > 26) {
-            return res.status(400).send({
-                isSuccess: false,
-                message: "Error with Password Length"
-            });
+      const {
+        lastname, firstname, email, userType, street,
+        barangayId, contactNumber, gender, birthDate,
+        experienceId, password, seniorNumber, prescribeMeds, 
+        healthStatus, remarks, relationships
+      } = req.body;
+  
+      // Get the uploaded file
+      const profileImage = req.file ? `/uploads/${req.file.filename}` : null; // Save file path
+  
+      // Encrypt password
+      const encryptedPassword = await bcrypt.hash(password, saltRounds);
+  
+      // Validate password length
+      if (password?.length < 8 || password?.length > 26) {
+        return res.status(400).send({
+          isSuccess: false,
+          message: "Error with Password Length"
+        });
+      }
+  
+      // Main transaction block
+      const result = await sequelize.transaction(async (t) => {
+  
+        // Create new user profile
+        const newUserProfile = await userProfile.create({
+          lastname: lastname,
+          firstname: firstname,
+          email: email,
+          userType: userType,
+          street: street,
+          barangayId: barangayId,
+          contactNumber: contactNumber,
+          gender: gender,
+          birthDate: birthDate,
+          experienceId: experienceId || null,
+          profileImage: profileImage // Save file path in profileImage
+        }, { transaction: t });
+  
+        // Create user record
+        await user.create({
+          userId: newUserProfile.dataValues.userId,
+          email: email,
+          password: encryptedPassword
+        }, { transaction: t });
+  
+        // If the user is a senior, create senior record and relationships if any
+        let newSenior = null;
+        if (userType === "senior") {
+          const newHealthStatus = await healthStatusModel.create({
+            healthStatus: healthStatus
+          }, { transaction: t });
+  
+          // Create senior record
+          newSenior = await senior.create({
+            userId: newUserProfile.dataValues.userId,
+            seniorNumber: seniorNumber,
+            healthStatusId: newHealthStatus.dataValues.healthStatusId,
+            prescribeMeds: prescribeMeds,
+            remarks: remarks
+          }, { transaction: t });
+  
+          // Handle relationships if provided
+          if (relationships && relationships.length > 0) {
+            const relationshipsWithSeniorId = relationships.map(rel => ({
+              ...rel,
+              seniorId: newSenior.dataValues.seniorId
+            }));
+  
+            // Ensure empty fields are handled properly
+            const sanitizedRelationships = relationshipsWithSeniorId.map(rel => ({
+              name: rel.name || null,
+              age: rel.age || null,
+              relationship: rel.relationship || null,
+              civilstatus: rel.civilstatus || null,
+              occupation: rel.occupation || null,
+              contactNumber: rel.contactNumber || null,
+              seniorId: newSenior.dataValues.seniorId
+            }));
+  
+            // Bulk create relationships
+            await relationship.bulkCreate(sanitizedRelationships, { transaction: t, validate: true });
+          }
         }
-
-        // Main transaction block
-        const result = await sequelize.transaction(async (t) => {
-
-            // Create new user profile
-            const newUserProfile = await userProfile.create({
-                lastname: lastname,
-                firstname: firstname,
-                email: email,
-                userType: userType,
-                street: street,
-                barangayId: barangayId,
-                contactNumber: contactNumber,
-                gender: gender,
-                birthDate: birthDate,
-                experienceId: experienceId || null,
-                profileImage: profileImage
-            }, { transaction: t });
-
-            // Create user record
-            await user.create({
-                userId: newUserProfile.dataValues.userId,
-                email: email,
-                password: encryptedPassword
-            }, { transaction: t });
-
-            // If the user is a senior, create senior record and relationships if any
-            let newSenior = null;
-            if (userType === "senior") {
-                newHealthStatus = await healthStatusModel.create({
-                    healthStatus:healthStatus
-                }, {transaction: t});
-
-
-                // Create senior record
-                newSenior = await senior.create({
-                    userId: newUserProfile.dataValues.userId,
-                    seniorNumber: seniorNumber,
-                    healthStatusId: newHealthStatus.dataValues.healthStatusId,
-                    prescribeMeds: prescribeMeds,
-                    remarks: remarks
-                }, { transaction: t });
-
-               // Handle relationships if provided
-                if (relationships && relationships.length > 0) {
-                    const relationshipsWithSeniorId = relationships.map(rel => ({
-                        ...rel,
-                        seniorId: newSenior.dataValues.seniorId
-                    }));
-
-                    // Ensure empty fields are handled properly
-                    const sanitizedRelationships = relationshipsWithSeniorId.map(rel => ({
-                        name: rel.name || null,
-                        age: rel.age || null,
-                        relationship: rel.relationship || null,
-                        civilstatus: rel.civilstatus || null,
-                        occupation: rel.occupation || null,
-                        contactNumber: rel.contactNumber || null,
-                        seniorId: newSenior.dataValues.seniorId
-                    }));
-
-                    // Bulk create relationships
-                    await relationship.bulkCreate(sanitizedRelationships, { transaction: t, validate: true });
-                }
-            }
-
-            return newUserProfile;
-        });
-
-        res.status(200).send({
-            isSuccess: true,
-            message: "Successfully Registered New User"
-        });
-
+  
+        return newUserProfile;
+      });
+  
+      res.status(200).send({
+        isSuccess: true,
+        message: "Successfully Registered New User"
+      });
+  
     } catch (e) {
-        await t.rollback();
-        next(e);
+      await t.rollback();
+      next(e);
     }
-}
+  };
+  
 
 
 
