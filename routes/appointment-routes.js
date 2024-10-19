@@ -10,4 +10,5 @@ router.put("/update-appointment/:appId",auth.verify,updateAppointment);
 
 router.get("/appointment-list",auth.verify,getAppointmentList);
 
+
 module.exports = router;

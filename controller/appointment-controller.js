@@ -5,7 +5,7 @@ const UserProfile = require("../model/UserProfile");
 const Experience = require("../model/Experience");
 const sequelize = require("../db/dbconnection");
 const { exportDecryptedData, exportEncryptedData } = require("../auth/secure");
-    const { QueryTypes, where } = require("sequelize");
+const { QueryTypes, where } = require("sequelize");
 
 
 const createAppointment = async(req,res,next)=>{
@@ -73,38 +73,45 @@ const createAppointment = async(req,res,next)=>{
 }
 
 const updateAppointment = async(req,res,next)=>{
-
+    const t = await sequelize.transaction();
+    console.log(req.body)
     try{
+        const {appId} = req.params
+        const {servingName,result}= req.body;
+        const convertedAppId = await exportDecryptedData(appId)
+        console.log(result);
+        console.log(servingName)
+        const resultParsed = result === 'accept'? "Approved Without Pay": "Rejected";
 
-        const {result}= req.body;
-  
-        // const {appId} = req.params;
-        const servingname = req.headers?.servingname;
-        // const appointmentId = Number(await exportDecryptedData(appId));
-    
-        const resultParsed = result === 'accept'? "Accepted": "Rejected";
+        const status = await Status.findOne(
+            {where: {
+                statusDescription: resultParsed
+            }   }
+        )
 
+        console.log(resultParsed)
 
-        // const appointment = await Appointment.findOne({
-        //     where: {
-        //         appointmentId: appointmentId
-        //     }
-        // })
-        // const statusId = appointment.dataValues?.statusId
-        // const resultFromAssistant = result === "accept"? "1":"3";
-        // await Status.update(
-        //     {statusDescription: resultFromAssistant},
-        //     {where: {
-        //         statusId: statusId
-        //     }   }
+        console.log(status);
+
+        // await Appointment.update(
+        //     {statusId: status.dataValues?.statusId},
+        //     {
+        //         where: {
+        //             appointmentId: convertedAppId
+        //         }
+        //     },
+        //     {transaction: t}
         // )
+
+
         res.status(200).send({
             isSuccess: true,
-            message: `Successfully ${resultParsed} Appointment With ${servingname}`
+            message: `Successfully `
         })
 
     }catch(e){
-        console.log(e.message);
+        console.log("error message")
+        console.log(e.message)
         next(e)
     }
 }   
