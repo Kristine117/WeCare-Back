@@ -27,9 +27,11 @@ const createAppointment = async(req,res,next)=>{
         const decAssistantId = Number(await exportDecryptedData(assistantId));
 
         const result = await sequelize.transaction(async (t)=>{
-            const newStatus = await Status.create({
-                statusDescription: "0"
-            },{transaction: t})
+            const newStatus = await Status.findOne({
+                where:{
+                    statusDescription: "Pending"
+                }
+            })
     
             const assistantRate = await sequelize.query(
             `SELECT e.rate from Experience e 
@@ -181,11 +183,11 @@ function createStatusList(value){
     const statusList = [];
     switch(value){
         case "ongoing":
-            statusList.push("0");
+            statusList.push("Pending");
             break;
         default:
-            statusList.push("1");
-            statusList.push("2");
+            statusList.push("Accepted Without Pay");
+            statusList.push("Accepted With Pay");
             break;
     }
 
