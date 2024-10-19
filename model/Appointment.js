@@ -44,14 +44,10 @@ sequelize.define('AppointmentRatings',{
             key:'statusId'
         }
     },
-    // paymentId: {
-    //     type: DataTypes.INTEGER,
-    //     allowNull:false,
-    //     references:{
-    //         model: Payment,
-    //         key:'paymentId'
-    //     }
-    // },
+    appointmentDate:{
+        type: DataTypes.DATE,
+        allowNull:false,
+    },
     numberOfHours:{
         type: DataTypes.INTEGER,
         allowNull:false

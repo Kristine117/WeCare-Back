@@ -4,8 +4,8 @@ const Payment = require("../model/Payment");
 const UserProfile = require("../model/UserProfile");
 const Experience = require("../model/Experience");
 const sequelize = require("../db/dbconnection");
-const { exportDecryptedData } = require("../auth/secure");
-    const { QueryTypes } = require("sequelize");
+const { exportDecryptedData, exportEncryptedData } = require("../auth/secure");
+const { QueryTypes, where } = require("sequelize");
 
 
 const createAppointment = async(req,res,next)=>{
@@ -27,9 +27,11 @@ const createAppointment = async(req,res,next)=>{
         const decAssistantId = Number(await exportDecryptedData(assistantId));
 
         const result = await sequelize.transaction(async (t)=>{
-            const newStatus = await Status.create({
-                statusDescription: "0"
-            },{transaction: t})
+            const newStatus = await Status.findOne({
+                where:{
+                    statusDescription: "Pending"
+                }
+            })
     
             const assistantRate = await sequelize.query(
             `SELECT e.rate from Experience e 
@@ -70,40 +72,133 @@ const createAppointment = async(req,res,next)=>{
     }
 }
 
-const updateAppointment = (req,res,next)=>{
+const updateAppointment = async(req,res,next)=>{
+    const t = await sequelize.transaction();
+    console.log(req.body)
     try{
+        const {appId} = req.params
+        const {servingName,result}= req.body;
+        const convertedAppId = await exportDecryptedData(appId)
+        console.log(result);
+        console.log(servingName)
+        const resultParsed = result === 'accept'? "Approved Without Pay": "Rejected";
 
-        
+        const status = await Status.findOne(
+            {where: {
+                statusDescription: resultParsed
+            }   }
+        )
 
+        console.log(resultParsed)
+
+        console.log(status);
+
+        // await Appointment.update(
+        //     {statusId: status.dataValues?.statusId},
+        //     {
+        //         where: {
+        //             appointmentId: convertedAppId
+        //         }
+        //     },
+        //     {transaction: t}
+        // )
+
+
+        res.status(200).send({
+            isSuccess: true,
+            message: `Successfully `
+        })
+
+    }catch(e){
+        console.log("error message")
+        console.log(e.message)
+        next(e)
+    }
+}   
+
+const getAppointmentList = async(req,res,next)=>{
+    try{
+        const {userId} = req.user;
+        const loggedinUser = await UserProfile.findOne({
+            where:{
+                userId: userId
+            }
+        });
+
+        const statusDescription = createStatusList(req.headers?.status);
+
+        const userType =  loggedinUser?.dataValues.userType;
+
+        const appointmentList = await sequelize.query(
+            `select distinct e.appointmentId, 
+            e.totalAmount,e.serviceDescription,
+            e.numberOfHours, g.statusDescription,
+            (select h.userType from UserProfile h
+            where h.userId = :kwanId) as loggedInUserType,
+            case 
+                when 'senior' = :kwanType then
+                (select concat_ws(" ",ef.firstName, ef.lastName) 
+                from UserProfile ef
+                where ef.userId = e.assistantId)
+                else (select concat_ws(" ",ef.firstName, ef.lastName) 
+                from UserProfile ef
+                where ef.userId = e.seniorId) 
+            end as servingName,
+            case 
+                when 'senior' = :kwanType then
+                  (select ef.profileImage 
+                    from UserProfile ef
+                    where ef.userId = e.assistantId)
+                else (select ef.profileImage 
+                from UserProfile ef
+                where ef.userId = e.seniorId) 
+            end as servingProfileImage,
+            case 
+                when 'senior' = :kwanType then e.assistantId
+                else e.seniorId
+            end as servingProfileId
+            from Appointment e
+            inner join UserProfile f
+              ON (('senior' = :kwanType AND e.seniorId = :kwanId)
+            OR ('senior' != :kwanType AND e.assistantId = :kwanId))
+            inner join Status g
+            on e.statusId = g.statusId
+            where g.statusDescription in (:statusDescription)
+            `,{
+                replacements: { kwanId: userId,
+                    kwanType:userType,statusDescription: statusDescription},
+                type: QueryTypes.SELECT
+            }
+        )
+
+        const newAppointmentList = appointmentList.map(async(val)=>{
+            val["appointmentId"] = await exportEncryptedData(String(val.appointmentId));
+            val["servingProfileId"] = await exportEncryptedData(String(val.assistantId));
+            return val;
+        })
+        res.status(201).send({
+            isSuccess: true,
+            message: "Successfully Retrieve Appointment List",
+            data: await Promise.all(newAppointmentList)
+        })
     }catch(e){
         next(e)
     }
 }
 
-const getAppointmentList = async(req,res,next)=>{
-    try{
-        const {userId} = req.user;
-        console.log(userId)
-        const appointmentList = await sequelize.query(
-            `select distinct e.appointmentId, e.totalAmount,e.numberOfHours,
-            g.statusDescription from Appointment e
-            inner join UserProfile f
-            on e.seniorId = :kwanId
-            inner join Status g
-            on e.statusId = g.statusId
-            `,{
-                replacements: { kwanId: userId },
-                type: QueryTypes.SELECT
-            }
-        )
-        res.status(201).send({
-            isSuccess: true,
-            message: "Successfully Retrieve Appointment List",
-            data: appointmentList
-        })
-    }catch(e){
-        next(e)
+function createStatusList(value){
+    const statusList = [];
+    switch(value){
+        case "ongoing":
+            statusList.push("Pending");
+            break;
+        default:
+            statusList.push("Accepted Without Pay");
+            statusList.push("Accepted With Pay");
+            break;
     }
+
+    return statusList;
 }
 
 module.exports = {

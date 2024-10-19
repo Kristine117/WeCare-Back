@@ -8,7 +8,6 @@ const { exportEncryptedData } = require("../auth/secure");
 const findAssistantsForSenior = async(req,res,next)=>{
     const {ratings,age,gender}=req.query;
     try{ 
-        // const results = await User.belo
         
         const results = await sequelize.query(
             `select userid, email, from UserProfile 
