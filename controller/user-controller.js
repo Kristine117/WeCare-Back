@@ -213,10 +213,11 @@ const addNewUserHandler = async (req, res, next) => {
           }, { transaction: t });
 
 
+
           // Create senior record
           newSenior = await senior.create({
             userId: newUserProfile.dataValues.userId,
-            seniorNumber: seniorNumber,
+            seniorNumber: seniorNumber || "",
             healthStatusId: newHealthStatus.dataValues.healthStatusId,
             prescribeMeds: prescribeMeds,
             remarks: remarks
