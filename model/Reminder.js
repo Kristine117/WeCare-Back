@@ -11,7 +11,7 @@ const Reminder = sequelize.define('Reminder',{
         primaryKey:true
     },
 
-   AppointmentId:{
+   appointmentId:{
         type:DataTypes.INTEGER,
         allowNull:false,
         references: {

@@ -30,6 +30,8 @@ const seniorRoutes = require("./routes/senior-routes");
 const paymentRoutes = require("./routes/payment-routes");
 const appointmentRoutes = require("./routes/appointment-routes");
 const adminRoutes = require("./routes/admin-routes");
+const noteRoutes  = require ("./routes/notes-routes")
+const reminderRoutes = require("./routes/reminder-routes");
 // Port
 const port = process.env.PORT || 4000;
 
@@ -63,8 +65,10 @@ app.use("/payment",paymentRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/appointment",appointmentRoutes);
 app.use("/admin",adminRoutes);
-// Serve uploaded files
+app.use("/notes",noteRoutes);
+app.use("/reminders",reminderRoutes);
 
+// Serve uploaded files
 app.get('/download/:filename', (req, res) => {
     const file = path.join(__dirname, 'uploads', req.params.filename);
     res.download(file);  // This forces the browser to download the image

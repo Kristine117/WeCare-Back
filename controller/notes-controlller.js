@@ -4,14 +4,16 @@ const Appointment = require('../model/Appointment')
 
 exports.createNote = async (req,res,next) => {
     const {noteContent ,appointmentId,isPinned, createdBy} = req.body;
-    console.log(createdBy);
-        const creator =  Number(await exportDecryptedData(createdBy.trim()));
-        console.log(creator);
+   
+    const creator =  Number(await exportDecryptedData(createdBy.trim()));
+
+    const decryptedAppointmentId = Number(await exportDecryptedData(appointmentId.trim()));
+        
      try{
         const note = await Note.create({
             noteContent:noteContent,
             isPinned:isPinned,
-            appointmentId:appointmentId,
+            appointmentId:decryptedAppointmentId,
            createdBy:creator
         })
 
@@ -47,24 +49,28 @@ exports.getALLNotes = async (req, res, next) => {
             where: {
                 createdBy: creator, // Filter by createdBy
             },
-            // include: [{
-            //     model: Appointment,
-            //     attributes: ['serviceDescription'],  // Include the serviceDescription from Appointment
-            //     required: true, // Ensures that only notes with corresponding appointments are returned
-            // }],
+           
             order: [
                 ['isPinned', 'DESC'], // First order by isPinned
                 ['updatedAt', 'DESC']  // Then order by updatedAt
             ],
             
         });
+      
+        const newnotesList = retrievedNotes.map(async (val) => {
+            val["appointmentId"] = await exportEncryptedData(String(val.appointmentId));
+            return val;
+        })
+
+        
 
         return res.status(200).send({
             isSuccess: true,
             message: "Successfully retrieved notes",
-            notes: retrievedNotes  
+            notes: await Promise.all( newnotesList )
         });
     } catch (error) {
+        console.log(error);
         next(error);
     }
 };
