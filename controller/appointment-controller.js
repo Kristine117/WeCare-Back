@@ -127,7 +127,7 @@ const getAppointmentList = async(req,res,next)=>{
         });
 
         const statusDescription = createStatusList(req.headers?.status);
-
+        console.log(statusDescription)
         const userType =  loggedinUser?.dataValues.userType;
 
         const appointmentList = await sequelize.query(
@@ -192,10 +192,12 @@ function createStatusList(value){
     switch(value){
         case "ongoing":
             statusList.push("Pending");
+            statusList.push("Approved Without Pay");
+            statusList.push("Approved With Pay");
             break;
         default:
-            statusList.push("Accepted Without Pay");
-            statusList.push("Accepted With Pay");
+            statusList.push("Approved Without Pay");
+            statusList.push("Approved With Pay");
             break;
     }
 
