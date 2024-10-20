@@ -46,7 +46,7 @@ const options = {
 // CORS Configuration
 app.use(cors({
     origin: 'http://localhost:3000', 
-    methods: ['GET', 'POST','PUT'],         
+    methods: ['GET', 'POST','DELETE','PUT'],         
     credentials: true                
 }));
 
@@ -77,7 +77,7 @@ const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
         origin: 'http://localhost:3000',  // Allow requests from your frontend
-        methods: ['GET', 'POST'],
+        methods: ['GET', 'POST','DELETE'],
         credentials: true
     }
 });
