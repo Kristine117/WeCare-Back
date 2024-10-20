@@ -29,6 +29,7 @@ const setupMessageRoutes = require("./routes/message-routes");
 const seniorRoutes = require("./routes/senior-routes");
 const paymentRoutes = require("./routes/payment-routes");
 const appointmentRoutes = require("./routes/appointment-routes");
+const noteRoutes = require("./routes/notes-routes")
 // Port
 const port = process.env.PORT || 4000;
 
@@ -45,7 +46,7 @@ const options = {
 // CORS Configuration
 app.use(cors({
     origin: 'http://localhost:3000', 
-    methods: ['GET', 'POST','PUT'],         
+    methods: ['GET', 'POST','DELETE','PUT'],         
     credentials: true                
 }));
 
@@ -61,6 +62,7 @@ app.use("/senior",seniorRoutes);
 app.use("/payment",paymentRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/appointment",appointmentRoutes);
+app.use("/notes",noteRoutes);
 
 // Serve uploaded files
 
@@ -76,7 +78,7 @@ const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
         origin: 'http://localhost:3000',  // Allow requests from your frontend
-        methods: ['GET', 'POST'],
+        methods: ['GET', 'POST','DELETE'],
         credentials: true
     }
 });
