@@ -180,6 +180,9 @@ exports.retrieveRoomId = async (req, res, next) => {
                 messageData.dataValues['isForReceiver'] = true;
                 io.to(roomIdReceiver).emit('receiveMessage',messageData);
 
+                io.emit('newMessageReceived', {
+                    message: "New message received"        
+                });
 
             } catch (error) {
                 console.error('Error sending message:', error);
@@ -187,7 +190,30 @@ exports.retrieveRoomId = async (req, res, next) => {
             }
         };
 
-
+        exports.updateMessageReadFlg = async (req, res) => {
+            try {
+              const { messageId } = req.body;  // Get messageId from request params
+              const  readFlag  = true;     
+          
+              // Update the message's readFlag field
+              const updatedRows = await Message.update(
+                { readFlag }, 
+                {
+                  where: { messageId } // Condition to find the message
+                }
+              );
+          
+              // Check if the update was successful
+              if (updatedRows[0] > 0) {
+                return res.status(200).json({ message: 'Message updated successfully' });
+              } else {
+                return res.status(404).json({ message: 'Message not found' });
+              }
+            } catch (error) {
+              console.error(error);
+              return res.status(500).json({ message: 'An error occurred while updating the message', error });
+            }
+          };
 
 
 exports.uploadFiles = async (req, res, io) => {
@@ -241,6 +267,11 @@ exports.uploadFiles = async (req, res, io) => {
                
                  savedMessage.dataValues['isForReceiver'] = true;
                  io.to(roomIdReceiver).emit('receiveMessage',savedMessage);
+
+                  // Emit to fetch new messages
+                    io.emit('newMessageReceived', {
+                        message: "New message received"
+                    });
  
             }
 
