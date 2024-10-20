@@ -74,34 +74,35 @@ const createAppointment = async(req,res,next)=>{
 
 const updateAppointment = async(req,res,next)=>{
     const t = await sequelize.transaction();
-    console.log(req.body)
-    try{
-        const {appId} = req.params
-        const {servingName,result}= req.body;
-        const convertedAppId = await exportDecryptedData(appId)
-        console.log(result);
-        console.log(servingName)
-        const resultParsed = result === 'accept'? "Approved Without Pay": "Rejected";
 
-        const status = await Status.findOne(
+    try{
+        const {appId} = req.params;
+        const {servingName,status} =req.headers;
+        const convertedAppId = await exportDecryptedData(appId)
+   
+        console.log(servingName)
+        const resultParsed = status === 'accept'? "Approved Without Pay": "Rejected";
+
+        const getStatus = await Status.findOne(
             {where: {
                 statusDescription: resultParsed
-            }   }
+            }   
+        }
         )
 
         console.log(resultParsed)
 
         console.log(status);
 
-        // await Appointment.update(
-        //     {statusId: status.dataValues?.statusId},
-        //     {
-        //         where: {
-        //             appointmentId: convertedAppId
-        //         }
-        //     },
-        //     {transaction: t}
-        // )
+        await Appointment.update(
+            {statusId: getStatus.dataValues?.statusId},
+            {
+                where: {
+                    appointmentId: convertedAppId
+                }
+            },
+            {transaction: t}
+        )
 
 
         res.status(200).send({
