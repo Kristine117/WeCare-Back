@@ -10,6 +10,19 @@ const relationship = require("../model/Relationship");
 const healthStatusModel = require("../model/HealthStatus");
 const xperience = require("../model/Experience");
 const { QueryTypes } = require("sequelize");
+const nodemailer = require('nodemailer');
+
+// Set up the transporter
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,    // Sender email address (from environment variable)
+        pass: process.env.EMAIL_PASSWORD // Email password or app-specific password
+    },
+    tls: {
+        rejectUnauthorized: false        // Allow self-signed certificates
+    }
+});
 
 
 // const addNewUserHandler = async (req, res, next) => {
@@ -134,7 +147,8 @@ const addNewUserHandler = async (req, res, next) => {
       const {
         lastname, firstname, email, userType, street,
         barangayId, contactNumber, gender, birthDate,
-        numOfYears, experienceDescription, rate, password, seniorNumber, prescribeMeds, 
+        numOfYears, experienceDescription, rate, 
+        password, seniorNumber, prescribeMeds, 
         healthStatus, remarks, relationships
       } = req.body;
   
@@ -191,6 +205,46 @@ const addNewUserHandler = async (req, res, next) => {
         }, { transaction: t });
   
         // Other logic for seniors, healthStatus, and relationships...
+        // If the user is a senior, create senior record and relationships if any
+        let newSenior = null;
+        if (userType === "senior") {
+          const newHealthStatus = await healthStatusModel.create({
+            healthStatus: healthStatus
+          }, { transaction: t });
+
+
+          // Create senior record
+          newSenior = await senior.create({
+            userId: newUserProfile.dataValues.userId,
+            seniorNumber: seniorNumber,
+            healthStatusId: newHealthStatus.dataValues.healthStatusId,
+            prescribeMeds: prescribeMeds,
+            remarks: remarks
+          }, { transaction: t });
+
+
+          // Handle relationships if provided
+          if (Array.isArray(relationships) && relationships.length > 0) {
+            const relationshipsWithSeniorId = relationships.map(rel => ({
+              ...rel,
+              seniorId: newSenior.dataValues.seniorId
+            }));
+
+            const sanitizedRelationships = relationshipsWithSeniorId.map(rel => ({
+              name: rel.name || null,
+              age: rel.age || null,
+              relationship: rel.relationship || null,
+              civilstatus: rel.civilstatus || null,
+              occupation: rel.occupation || null,
+              contactNumber: rel.contactNumber || null,
+              seniorId: newSenior.dataValues.seniorId
+            }));
+            await relationship.bulkCreate(sanitizedRelationships, { transaction: t, validate: true });
+          }
+
+         }
+  
+        return newUserProfile;
       });
   
       res.status(200).send({
@@ -205,10 +259,6 @@ const addNewUserHandler = async (req, res, next) => {
   };
   
   
-  
-
-
-
 
 const saveUserRegistrationInSession = (req,res,next)=>{
     const {lastname,firstname,
@@ -466,6 +516,36 @@ const getAssistantDetails = async(req,res,next)=>{
     }
 }
 
+// Function to send registration details via email
+const retrievePasswordThruEmail = async (req, res, next) => {
+    try {
+        const { firstname, lastname, email } = req.body;
+
+        // Define email options
+        const mailOptions = {
+            from: process.env.EMAIL_USER,  // Sender email
+            to: process.env.EMAIL_USER,    // Receiver email (admin email)
+            subject: `New User Registration - ${firstname} ${lastname}`,  // Email subject
+            text: `A new user has registered with the following details:
+                   Name: ${firstname} ${lastname}
+                   Email: ${email}`  // Email content (plain text)
+        };
+
+        // Send email using transporter
+        transporter.sendMail(mailOptions, (err, info) => {
+            if (err) {
+                console.error('Error sending email:', err);
+                return res.status(500).send({ isSuccess: false, message: 'Failed to send email.' });
+            }
+            console.log('Email sent: ' + info.response);
+            res.status(200).send({ isSuccess: true, message: 'Email sent successfully!' });
+        });
+
+    } catch (error) {
+        console.error('Error in email sending function:', error);
+        next(error); // Pass the error to the next middleware
+    }
+};
 
 
 // Function to fetch all user emails
@@ -498,5 +578,6 @@ module.exports = {
     retrieveListUserDetails,
     processProfile,
     getAssistantDetails,
-    fetchAllEmails
+    fetchAllEmails,
+    retrievePasswordThruEmail
 }

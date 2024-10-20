@@ -2,7 +2,7 @@
   const multer = require('multer');
   const path = require('path');
   const fs = require('fs');
-  const { addNewUserHandler, grabSession, fetchAllEmails } = require('../controller/user-controller');
+  const { addNewUserHandler, grabSession, fetchAllEmails, retrievePasswordThruEmail } = require('../controller/user-controller');
   const { v4: uuidv4 } = require('uuid');
 
   const router = express.Router();
@@ -29,5 +29,7 @@
 
   router.get("/register-user", grabSession);
   router.get("/get-all-email", fetchAllEmails);
+
+  router.post("/retrieve-password", retrievePasswordThruEmail);
 
   module.exports = router;
