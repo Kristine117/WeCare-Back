@@ -126,14 +126,13 @@ const getAppointmentList = async(req,res,next)=>{
             }
         });
 
-        const statusDescription = createStatusList(req.headers?.status);
-        console.log(statusDescription)
+        const statusDescription = createStatusList(req.headers?.status,loggedinUser.dataValues?.userType);
         const userType =  loggedinUser?.dataValues.userType;
 
         const appointmentList = await sequelize.query(
             `select distinct e.appointmentId, 
             e.totalAmount,e.serviceDescription,
-            e.numberOfHours, g.statusDescription,
+            e.numberOfHours, g.statusId, g.statusDescription,
             (select h.userType from UserProfile h
             where h.userId = :kwanId) as loggedInUserType,
             case 
@@ -187,19 +186,25 @@ const getAppointmentList = async(req,res,next)=>{
     }
 }
 
-function createStatusList(value){
+function createStatusList(value,userType){
     const statusList = [];
+   if(userType === "senior"){
+    statusList.push("Pending");
+    statusList.push("Approved Without Pay");
+    statusList.push("Approved With Pay");
+    statusList.push("Rejected");
+   }else {
     switch(value){
         case "ongoing":
             statusList.push("Pending");
-            statusList.push("Approved Without Pay");
-            statusList.push("Approved With Pay");
+        
             break;
         default:
             statusList.push("Approved Without Pay");
             statusList.push("Approved With Pay");
             break;
     }
+   }
 
     return statusList;
 }
