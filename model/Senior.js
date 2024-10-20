@@ -28,7 +28,7 @@ const Senior = sequelize.define('Senior', {
     },
     seniorNumber: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     prescribeMeds: {
         type: DataTypes.STRING,
