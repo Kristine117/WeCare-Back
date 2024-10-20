@@ -147,7 +147,8 @@ const addNewUserHandler = async (req, res, next) => {
       const {
         lastname, firstname, email, userType, street,
         barangayId, contactNumber, gender, birthDate,
-        numOfYears, experienceDescription, rate, password, seniorNumber, prescribeMeds, 
+        numOfYears, experienceDescription, rate, 
+        password, seniorNumber, prescribeMeds, 
         healthStatus, remarks, relationships
       } = req.body;
   
@@ -204,6 +205,46 @@ const addNewUserHandler = async (req, res, next) => {
         }, { transaction: t });
   
         // Other logic for seniors, healthStatus, and relationships...
+        // If the user is a senior, create senior record and relationships if any
+        let newSenior = null;
+        if (userType === "senior") {
+          const newHealthStatus = await healthStatusModel.create({
+            healthStatus: healthStatus
+          }, { transaction: t });
+
+
+          // Create senior record
+          newSenior = await senior.create({
+            userId: newUserProfile.dataValues.userId,
+            seniorNumber: seniorNumber,
+            healthStatusId: newHealthStatus.dataValues.healthStatusId,
+            prescribeMeds: prescribeMeds,
+            remarks: remarks
+          }, { transaction: t });
+
+
+          // Handle relationships if provided
+          if (Array.isArray(relationships) && relationships.length > 0) {
+            const relationshipsWithSeniorId = relationships.map(rel => ({
+              ...rel,
+              seniorId: newSenior.dataValues.seniorId
+            }));
+
+            const sanitizedRelationships = relationshipsWithSeniorId.map(rel => ({
+              name: rel.name || null,
+              age: rel.age || null,
+              relationship: rel.relationship || null,
+              civilstatus: rel.civilstatus || null,
+              occupation: rel.occupation || null,
+              contactNumber: rel.contactNumber || null,
+              seniorId: newSenior.dataValues.seniorId
+            }));
+            await relationship.bulkCreate(sanitizedRelationships, { transaction: t, validate: true });
+          }
+
+         }
+  
+        return newUserProfile;
       });
   
       res.status(200).send({
@@ -216,6 +257,7 @@ const addNewUserHandler = async (req, res, next) => {
       next(e);
     }
   };
+  
   
 
 const saveUserRegistrationInSession = (req,res,next)=>{
