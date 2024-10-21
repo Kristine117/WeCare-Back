@@ -47,7 +47,12 @@ const addNewUserHandler = async (req, res, next) => {
         });
         }
     }
-
+    let approvingFlg = false;
+    if(userType === "assistant"){
+        approvingFlg = true;
+    } else {
+        approvingFlg = false;
+    }
 
     // Ensure relationships is always an array
     relationships = Array.isArray(relationships) ? relationships : [];
@@ -76,7 +81,7 @@ const addNewUserHandler = async (req, res, next) => {
     const result = await sequelize.transaction(async (t) => {
         // Only create the Experience record if all experience fields are provided
         if (numOfYears && experienceDescription && rate) {
-        newExperience = await experience.create({
+        newExperience = await xperience.create({
             numOfYears: numOfYears,
             experienceDescription: experienceDescription,
             rate: rate
@@ -95,7 +100,8 @@ const addNewUserHandler = async (req, res, next) => {
         gender: gender,
         birthDate: birthDate,
         experienceId: newExperience ? newExperience.experienceId : null, // Use null, not 0
-        profileImage: profileImagePath || null // Save file path or set to null
+        profileImage: profileImagePath || null, // Save file path or set to null
+        approveFlg:approvingFlg
         }, { transaction: t });
 
         // Create user record
