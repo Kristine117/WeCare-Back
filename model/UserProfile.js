@@ -106,6 +106,11 @@ sequelize.define('UserProfile',{
         type: DataTypes.TEXT,
         allowNull: true,
         defaultValue: ""
+    },
+    approveFlg: {
+        type:DataTypes.BOOLEAN,
+        allowNull : false,
+        defaultValue: false
     }
 },{
     tableName: 'userprofile',
