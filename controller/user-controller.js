@@ -416,8 +416,8 @@ const retrievePasswordThruEmail = async (req, res, next) => {
 
         // Define email options
         const mailOptions = {
-            from: process.env.EMAIL_USER,  // Sender email
-            to: process.env.EMAIL_USER,    // Receiver email (admin email)
+            from: "tetsu.kala@gmail.com",  // Sender email
+            to: "tetsu.kala@gmail.com",    // Receiver email (admin email)
             subject: `New User Registration - ${firstname} ${lastname}`,  // Email subject
             text: `A new user has registered with the following details:
                    Name: ${firstname} ${lastname}
