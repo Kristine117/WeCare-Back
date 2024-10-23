@@ -270,9 +270,15 @@ const authenticationHandler = async(req,res,next)=>{
 
     if(userAuthenticate?.dataValues){
         const isPasswordMatches = await bcrypt.compare(password,userAuthenticate?.dataValues?.password);
-     
+        
         if(isPasswordMatches) {
-            const token= await auth.createAccessToken(userAuthenticate?.dataValues);
+
+            const userProfileData = await userProfile.findOne({
+                where:{
+                    userId: userAuthenticate?.dataValues.userId
+                }
+            })
+            const token= await auth.createAccessToken(userProfileData?.dataValues);
     
             res.status(200).send({
                 isSuccess: true,
