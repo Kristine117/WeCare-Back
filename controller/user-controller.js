@@ -50,8 +50,6 @@ const addNewUserHandler = async (req, res, next) => {
 
     // Ensure relationships is always an array
     relationships = Array.isArray(relationships) ? relationships : [];
-
-    
     let newExperience = null;
 
     // Encrypt password
