@@ -107,6 +107,12 @@ sequelize.define('UserProfile',{
         allowNull: true,
         defaultValue: ""
     },
+    registerDate: {
+        type:DataTypes.DATE,
+        allowNull : false,      
+        defaultValue: false
+    },
+    
     approveFlg: {
         type:DataTypes.BOOLEAN,
         allowNull : false,
