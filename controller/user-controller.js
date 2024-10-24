@@ -56,8 +56,8 @@ const addNewUserHandler = async (req, res, next) => {
     let profileImagePath = null;
     if (req.file) {
         // profileImagePath = req.file.path; Save file path if uploaded
-        // profileImagePath = req.file.path.split('profilePictures')[1];
-        profileImagePath = path.relative(path.join(__dirname, '../profilePictures'), req.file.path);
+        profileImagePath = req.file.path.split('profilePictures')[1];
+        //profileImagePath = path.relative(path.join(__dirname, '../profilePictures'), req.file.path);
 
     }
 
