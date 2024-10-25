@@ -5,7 +5,7 @@ const UserProfile = require("../model/UserProfile");
 const Experience = require("../model/Experience");
 const sequelize = require("../db/dbconnection");
 const { exportDecryptedData, exportEncryptedData } = require("../auth/secure");
-const { QueryTypes, where } = require("sequelize");
+const { QueryTypes} = require("sequelize");
 
 
 const createAppointment = async(req,res,next)=>{
@@ -90,8 +90,6 @@ const updateAppointment = async(req,res,next)=>{
             }   
         }
         )
-
-        console.log(resultParsed)
 
         console.log(status);
 

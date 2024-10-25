@@ -10,12 +10,9 @@ const router = express.Router();
 
 router.get("/admin-cards/details",auth.verify,adminHeaderCardsDetails)
 
-router.get("/user-list",auth.verify
-    ,showUsers
-);
+router.get("/user-list",auth.verify,auth.verifyAdmin,showUsers);
 
 router.get("/ratings-list",auth.verify,showRatings);
-
 
 router.get("/assistant-applicants",auth.verify,showPendingListOfAssistantAccountApplication);
 
