@@ -10,19 +10,6 @@ const relationship = require("../model/Relationship");
 const healthStatusModel = require("../model/HealthStatus");
 const xperience = require("../model/Experience");
 const { QueryTypes } = require("sequelize");
-const nodemailer = require('nodemailer');
-
-// Set up the transporter
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,    // Sender email address (from environment variable)
-        pass: process.env.EMAIL_PASSWORD // Email password or app-specific password
-    },
-    tls: {
-        rejectUnauthorized: false        // Allow self-signed certificates
-    }
-});
 
 
 const addNewUserHandler = async (req, res, next) => {
@@ -66,7 +53,10 @@ const addNewUserHandler = async (req, res, next) => {
     // Handle profile image file if uploaded (assume using something like multer)
     let profileImagePath = null;
     if (req.file) {
-        profileImagePath = req.file.path; // Save file path if uploaded
+        // profileImagePath = req.file.path; Save file path if uploaded
+        profileImagePath = req.file.path.split('profilePictures')[1];
+        //profileImagePath = path.relative(path.join(__dirname, '../profilePictures'), req.file.path);
+
     }
 
     // Main transaction block
@@ -413,36 +403,6 @@ const getAssistantDetails = async(req,res,next)=>{
     }
 }
 
-// Function to send registration details via email
-const retrievePasswordThruEmail = async (req, res, next) => {
-    try {
-        const { firstname, lastname, email } = req.body;
-
-        // Define email options
-        const mailOptions = {
-            from: process.env.EMAIL_USER,  // Sender email
-            to: process.env.EMAIL_USER,    // Receiver email (admin email)
-            subject: `New User Registration - ${firstname} ${lastname}`,  // Email subject
-            text: `A new user has registered with the following details:
-                   Name: ${firstname} ${lastname}
-                   Email: ${email}`  // Email content (plain text)
-        };
-
-        // Send email using transporter
-        transporter.sendMail(mailOptions, (err, info) => {
-            if (err) {
-                console.error('Error sending email:', err);
-                return res.status(500).send({ isSuccess: false, message: 'Failed to send email.' });
-            }
-            console.log('Email sent: ' + info.response);
-            res.status(200).send({ isSuccess: true, message: 'Email sent successfully!' });
-        });
-
-    } catch (error) {
-        console.error('Error in email sending function:', error);
-        next(error); // Pass the error to the next middleware
-    }
-};
 
 
 // Function to fetch all user emails
@@ -475,6 +435,5 @@ module.exports = {
     retrieveListUserDetails,
     processProfile,
     getAssistantDetails,
-    fetchAllEmails,
-    retrievePasswordThruEmail
+    fetchAllEmails
 }

@@ -74,6 +74,8 @@ app.get('/download/:filename', (req, res) => {
     const file = path.join(__dirname, 'uploads', req.params.filename);
     res.download(file);  // This forces the browser to download the image
 });
+app.use('/profilePictures', express.static(path.join(__dirname, 'profilePictures')));
+
 
 // Create HTTP server
 const server = http.createServer(app);
