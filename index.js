@@ -32,6 +32,7 @@ const appointmentRoutes = require("./routes/appointment-routes");
 const adminRoutes = require("./routes/admin-routes");
 const noteRoutes  = require ("./routes/notes-routes")
 const reminderRoutes = require("./routes/reminder-routes");
+const notificationRoutes = require("./routes/notification-routes")
 // Port
 const port = process.env.PORT || 4000;
 
@@ -67,6 +68,7 @@ app.use("/appointment",appointmentRoutes);
 app.use("/admin",adminRoutes);
 app.use("/notes",noteRoutes);
 app.use("/reminders",reminderRoutes);
+app.use("/notifications",notificationRoutes);
 
 // Serve uploaded files
 app.get('/download/:filename', (req, res) => {

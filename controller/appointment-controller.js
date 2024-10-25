@@ -62,6 +62,7 @@ const createAppointment = async(req,res,next)=>{
         })
 
 
+
         res.status(201).send({
             isSuccess: true,
             message: "Successfully Created Appointment"
