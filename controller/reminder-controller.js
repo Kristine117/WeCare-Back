@@ -9,7 +9,8 @@ exports.createReminder = async (req,res,next) => {
         const reminder =  await Reminder.create({
             appointmentId:appointmentIdDecrypted,
             reminderDate:reminderDate,
-            reminderTime:reminderTime
+            reminderTime:reminderTime,
+            
         })
         if (reminder) {
             return res.status(200).json({ message: 'Remindercreated successfully' });
