@@ -110,7 +110,7 @@ sequelize.define('UserProfile',{
     registerDate: {
         type:DataTypes.DATE,
         allowNull : false,      
-        defaultValue: false
+        defaultValue: new Date()
     },
     
     approveFlg: {
