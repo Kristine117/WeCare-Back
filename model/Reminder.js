@@ -31,8 +31,12 @@ const Reminder = sequelize.define('Reminder',{
         allowNull:false,   
         
     },
-            
-   
+
+    readFlag: {
+        type:DataTypes.BOOLEAN,
+        allowNull:false,
+        defaultValue:false
+    },            
 
 },{
     tableName: 'reminder',
