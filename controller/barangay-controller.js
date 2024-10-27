@@ -28,8 +28,34 @@ const getAllBarangays = async (req,res,next)=>{
     }
 }
 
+const getSpecificBrangay = async (req, res, next) => {
+    try {
+        // Retrieve the ID from req.params
+        const brgId = req.params.brgId;
+
+        // Find the barangay by primary key
+        const barangayResult = await Barangay.findByPk(brgId);
+
+        if (!barangayResult) {
+            return res.status(404).send({
+                isSuccess: false,
+                message: "Barangay not found"
+            });
+        }
+
+        res.status(200).send({
+            isSuccess: true,
+            message: "Successfully retrieved barangay",
+            data: barangayResult
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
 
 module.exports = {
     addNewBarangayFuncHandler,
-    getAllBarangays
+    getAllBarangays,
+    getSpecificBrangay
 }
