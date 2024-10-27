@@ -110,6 +110,46 @@ const showUsers = async(req,res,next)=>{
 const showPendingListOfAssistantAccountApplication = async(req,res,next)=>{
     try{
 
+        const assistantListPending = await sequelize.query(`
+            select e.userId, (concat_ws(" ",e.firstname,
+            e.lastname)) as fullName,
+            e.profileImage,
+            e.approveFlg from UserProfile e
+            where e.userType = 'assistant'
+            and e.approveFlg = false`,
+        {
+            type:QueryTypes.SELECT
+        })
+
+        const newAssistantList = assistantListPending.map(async(val)=>{
+            val["userId"] = await exportEncryptedData(String(val.userId));
+            return val;
+        })
+
+        const assistantListApproved = await sequelize.query(`
+            select e.userId, (concat_ws(" ",e.firstname,
+            e.lastname)) as fullName,
+            e.profileImage,
+            e.approveFlg from UserProfile e
+            where e.userType = 'assistant'
+            and e.approveFlg = true`,
+        {
+            type:QueryTypes.SELECT
+        })
+
+        const newAssistantListApproved = assistantListApproved.map(async(val)=>{
+            val["userId"] = await exportEncryptedData(String(val.userId));
+            return val;
+        })
+
+        res.status(201).send({
+            isSuccess: true,
+            message: "Successfully retrieve list of unverified Assistants",
+            data:{assistantListPending: await Promise.all(newAssistantList),
+                assistantListApproved: await Promise.all(newAssistantListApproved)
+            }
+        })
+
     }catch(e){
         next(e)
     }
@@ -129,6 +169,7 @@ module.exports = {
     manageRatings,
     showRatings,
     manageUsers,
-    showUsers,showPendingListOfAssistantAccountApplication,
+    showUsers,
+    showPendingListOfAssistantAccountApplication,
     validateAssistantAccountRegisteration
 }
