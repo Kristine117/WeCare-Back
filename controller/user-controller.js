@@ -336,6 +336,7 @@ const retrieveListUserDetails = async(req,res,next)=>{
                 ON f.messageId = latestMessage.latestMessageId 
             WHERE 
                 e.userType = :userType
+            and e.approveFlg = true
                 ORDER BY 
             f.date DESC `,{
                     replacements:{loggedInUserId: userId,userType: userType},

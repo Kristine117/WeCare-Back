@@ -1,6 +1,7 @@
 const {DataTypes} = require ('sequelize');
 const sequelize = require('../db/dbconnection');
 const Appointment = require("../model/Appointment");
+const UserProfile = require("./UserProfile");
 const Payment = 
 sequelize.define('Payment',{
     
@@ -22,6 +23,18 @@ sequelize.define('Payment',{
             model: Appointment,
             key: 'appointmentId'
         }
+    },
+    processedPaymentId:{
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    payerId:{
+        type: DataTypes.INTEGER,
+        allowNull:false,
+        references:{
+            model:UserProfile,
+            key: 'userId'
+            },
     }
 
 },{
