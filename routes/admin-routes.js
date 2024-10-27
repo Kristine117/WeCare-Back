@@ -16,7 +16,7 @@ router.get("/ratings-list",auth.verify,showRatings);
 
 router.get("/assistant-applicants",auth.verify,showPendingListOfAssistantAccountApplication);
 
-router.put("/user-manage/:userId",auth.verify,manageUsers);
+router.put("/user-manage/:userId/:operation",auth.verify,auth.verifyAdmin,manageUsers);
 
 router.put("/ratings-manage/:ratingId",auth.verify,manageRatings);
 
