@@ -6,7 +6,7 @@ const Experience = require("../model/Experience");
 const sequelize = require("../db/dbconnection");
 const { exportDecryptedData, exportEncryptedData } = require("../auth/secure");
 const { QueryTypes} = require("sequelize");
-
+const {io} = require("../index")
 
 const createAppointment = async(req,res,next)=>{
     
@@ -67,6 +67,21 @@ const createAppointment = async(req,res,next)=>{
             isSuccess: true,
             message: "Successfully Created Appointment"
         })
+        console.log('Emitting testEvent'); // Add this line
+        console.log('Emitting testEvent'); // Add this line
+        console.log('Emitting testEvent'); // Add this line
+        console.log('Emitting testEvent'); // Add this line
+        console.log('Emitting testEvent'); // Add this line
+        console.log('Emitting testEvent'); // Add this line
+        console.log('Emitting testEvent'); // Add this line
+        console.log('Emitting testEvent'); // Add this line
+        console.log('Emitting testEvent'); // Add this line
+        console.log('Emitting testEvent'); // Add this line
+
+        io.emit('testEvent', {
+            message: "New message received"
+        });
+      
     }catch(e){
         await t.rollback();
         next(e);
@@ -109,6 +124,10 @@ const updateAppointment = async(req,res,next)=>{
             message: `Successfully `
         })
 
+        io.emit('newNotifsReceived', {
+            message: "New message received"
+        });
+       
     }catch(e){
         console.log("error message")
         console.log(e.message)

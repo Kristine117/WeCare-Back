@@ -2,12 +2,12 @@ const Reminder = require("../model/Reminder");
 const { exportDecryptedData, exportEncryptedData } = require('../auth/secure');
 
 exports.createReminder = async (req,res,next) => {
-    const {appointmentId,reminderDate,reminderTime} = req.body;
-    const appointmentIdDecrypted =  Number(await exportDecryptedData(appointmentId.trim()));
+    const {noteId,reminderDate,reminderTime} = req.body;
+   // const appointmentIdDecrypted =  Number(await exportDecryptedData(appointmentId.trim()));
     try{
 
         const reminder =  await Reminder.create({
-            appointmentId:appointmentIdDecrypted,
+            noteId:noteId,
             reminderDate:reminderDate,
             reminderTime:reminderTime,
             

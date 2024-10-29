@@ -33,6 +33,7 @@ const adminRoutes = require("./routes/admin-routes");
 const noteRoutes  = require ("./routes/notes-routes")
 const reminderRoutes = require("./routes/reminder-routes");
 const assistantRoutes = require("./routes/assistant-routes");
+const notifRoutes = require("./routes/notification-routes")
 // Port
 const port = process.env.PORT || 4000;
 
@@ -69,6 +70,7 @@ app.use("/admin",adminRoutes);
 app.use("/notes",noteRoutes);
 app.use("/reminders",reminderRoutes);
 app.use("/assistant",assistantRoutes);
+app.use("/notifications",notifRoutes);
 // Serve uploaded files
 app.get('/download/:filename', (req, res) => {
     const file = path.join(__dirname, 'uploads', req.params.filename);
@@ -88,6 +90,7 @@ const io = socketIo(server, {
         credentials: true
     }
 });
+
 
 // Session creation
 const sessionStore = new MySQLStore(options);
@@ -150,7 +153,8 @@ async function startServer() {
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-   
+    socket.emit('testEvent', { message: 'Hello from server!' });
+
     socket.on('joinRoom', ({ roomId, senderId }) => {
         // Join the client to the specified room
         socket.join(roomId);
@@ -173,6 +177,8 @@ io.on('connection', (socket) => {
     });
 
 
+
+
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
     });
@@ -182,4 +188,7 @@ io.on('connection', (socket) => {
 
 
 startServer();
+
+
+module.exports = { io };
 
