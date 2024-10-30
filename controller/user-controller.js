@@ -166,7 +166,6 @@ const grabSession = async(req,res,next)=>{
 const getUserDataUsingAuthenticationToken = 
 async(req,res,next)=>{
    try{
-
     const userInfo = await userProfile.findOne({
         where:{
             userId:req.user.userId
@@ -175,7 +174,6 @@ async(req,res,next)=>{
     const encryptedId = await exportEncryptedData(String(req.user.userId));
 
     if(!userInfo){
-
         return res.status(400).send({
             isSuccess: false,
             message: "Something went wrong!",
@@ -197,44 +195,128 @@ async(req,res,next)=>{
     next(e)
    }
 }
-const updateUserHandlerForProfile = 
-async(req,res,next)=> {
-    const userId = req.user.userId;
-    const {lastname,firstname,
-        email,userType, street,
-        barangayId,
-        contactNumber,gender,birthDate,
-        experienceId,password} = req.body;
 
-        const encryptedPassword = await bcrypt.hash(password,saltRounds)
-    try{
-        const updateUserProfile = await userProfile.update(
-            {firstname: firstname,
-                lastname:lastname,
-                email:email,
-                userType:userType,
-                barangayId:barangayId,
-                contactNumber:contactNumber,
-                gender:gender,
-                birthDate:birthDate,
-                experienceId:experienceId,
-                password:encryptedPassword
-            },
-            {where: {
-                userId:userId
-            }}
-        )
-        
+
+// const updateUserHandlerForProfile = async (req, res, next) => {
+//     console.log(req.user.userId);
+//     try {
+//         let userId = req.user.userId;
+//         let {
+//             lastname, firstname, email, userType, street,
+//             barangayId, contactNumber, gender, birthDate,
+//             experienceId, password
+//         } = req.body;
+    
+//         let profileImagePath = null;
+//         if (req.file) {
+//             //profileImagePath = req.file.path; //Save file path if uploaded
+//             profileImagePath = req.file.path.split('profilePictures')[1];
+//             //profileImagePath = path.relative(path.join(__dirname, '../profilePictures'), req.file.path);
+//         }
+    
+//         let encryptedPassword = await bcrypt.hash(password, saltRounds);
+    
+//         let updateData = {
+//             firstname,
+//             lastname,
+//             email,
+//             userType,
+//             barangayId,
+//             contactNumber,
+//             gender,
+//             birthDate,
+//             street,
+//             profileImage: profileImagePath || null, // Save file path or set to null
+//             experienceId: experienceId || null
+//         };
+
+//         let userDataAcc = {
+//             email,
+//             encryptedPassword
+//         };
+
+//         const updateUserProfile = await userProfile.update(updateData, {
+//             where: { userId }
+//         });
+
+//         const updateUserAcc = await user.update(userDataAcc , {
+//             where: { userId }
+//         });
+
+//         res.status(200).send({
+//             isSuccess: true,
+//             message: "User Data Updated",
+//             data: updateUserProfile?.dataValues
+//         });
+//     } catch (e) {
+//         next(e);
+//     }
+// };
+
+const updateUserHandlerForProfile = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+        const {
+            lastname, firstname, email, userType, street,
+            barangayId, contactNumber, gender, birthDate,
+            experienceId, password
+        } = req.body;
+
+        let profileImagePath = null;
+        if (req.file) {
+            // Assume the static directory `profilePictures` is correctly set for serving images
+            profileImagePath = req.file.path.split('profilePictures')[1];
+        }
+
+        // Encrypt the password only if it's provided
+        let encryptedPassword;
+        if (password) {
+            encryptedPassword = await bcrypt.hash(password, saltRounds);
+        }
+
+        // Prepare data for userProfile update
+        const updateData = {
+            firstname,
+            lastname,
+            email,
+            userType,
+            barangayId,
+            contactNumber,
+            gender,
+            birthDate,
+            street,
+            profileImage: profileImagePath || null,
+            experienceId: experienceId || null
+        };
+
+        // Prepare data for user account update
+        const userDataAcc = {
+            email
+        };
+        if (encryptedPassword) {
+            userDataAcc.password = encryptedPassword;
+        }
+
+        // Update userProfile data
+        const updateUserProfile = await userProfile.update(updateData, {
+            where: { userId }
+        });
+
+        // Update user account data if needed
+        const updateUserAcc = await user.update(userDataAcc, {
+            where: { userId }
+        });
+
         res.status(200).send({
             isSuccess: true,
-            message: "Hello there",
+            message: "User Data Updated",
             data: updateUserProfile?.dataValues
-        })   
-    }catch(e){
+        });
+    } catch (e) {
         next(e);
     }
-    
-}
+};
+
 
 const authenticationHandler = async(req,res,next)=>{
 
