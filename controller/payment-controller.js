@@ -1,19 +1,27 @@
-	// Adyen Node API Library v18.0.0
-// Require the parts of the module you want to use
-const { Client, CheckoutAPI } = require('@adyen/api-library');
-// Initialize the client object
-// For the live environment, additionally include your liveEndpointUrlPrefix.
-const client = new Client({apiKey: "ADYEN_API_KEY", environment: "TEST"});
-
+const Appointment = require("../model/Appointment");
 const Payment = require("../model/Payment");
-
+const sequelize = require("../db/dbconnection");
 const processPayment = async(req,res,next)=>{
-    
-    const {paymentMethod} = req.body;
+    const {userId} = req.user
+    const {paymentMethod,appointmentId,processedPaymentId} = req.body;
     try{
-        await Payment.create({
-            paymentMethod:paymentMethod
-        })
+        console.log(await req)
+    //    await sequelize.transaction(async(t)=>{
+
+    //         await Payment.create({
+    //             paymentMethod:paymentMethod,
+    //             appointmentId:appointmentId,
+    //             processedPaymentId:processedPaymentId,
+    //             payerId: userId
+    //         },{transaction: t})
+
+    //         await Appointment.update({
+    //             statusId: 4
+    //         },{transaction: t})
+
+
+
+    //    })
     }catch(e){
         next(e);
     }

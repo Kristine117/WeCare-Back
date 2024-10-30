@@ -93,10 +93,9 @@ const updateAppointment = async(req,res,next)=>{
 
     try{
         const {appId} = req.params;
-        const {servingName,status} =req.headers;
+        const {servingName,status} =req.body;
         const convertedAppId = await exportDecryptedData(appId)
-   
-        console.log(servingName)
+
         const resultParsed = status === 'accept'? "Approved Without Pay": "Rejected";
 
         const getStatus = await Status.findOne(
@@ -106,18 +105,14 @@ const updateAppointment = async(req,res,next)=>{
         }
         )
 
-        console.log(status);
-
         await Appointment.update(
             {statusId: getStatus.dataValues?.statusId},
             {
                 where: {
                     appointmentId: convertedAppId
                 }
-            },
-            {transaction: t}
+            }
         )
-
 
         res.status(200).send({
             isSuccess: true,

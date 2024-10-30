@@ -28,7 +28,34 @@ const getAllExperience = async(req,res,next)=>{
     }
 }
 
+const getSpecificExperience = async(req,res,next)=>{
+    try {
+        // Retrieve the ID from req.params
+        const expId = req.params.expId;
+
+        // Find the barangay by primary key
+        const experienceResult = await Experience.findByPk(expId);
+
+        if (!experienceResult) {
+            return res.status(404).send({
+                isSuccess: false,
+                message: "Barangay not found"
+            });
+        }
+
+        res.status(200).send({
+            isSuccess: true,
+            message: "Successfully retrieved experience",
+            data: experienceResult
+        });
+    } catch (e) {
+        next(e);
+    }
+}
+
 module.exports = {
     addNewExperienceHandler,
-getAllExperience}
+    getAllExperience,
+    getSpecificExperience
+}
 
