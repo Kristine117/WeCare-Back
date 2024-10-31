@@ -194,7 +194,48 @@ const showPendingListOfAssistantAccountApplication = async(req,res,next)=>{
 
 const validateAssistantAccountRegisteration = async(req,res,next)=>{
     try{
+        const {userId,decision} = req.body;
+        const decryptedUserId = await exportDecryptedData(userId);
+     
+        if(decision==="approve"){
+            await UserProfile.update({
+                approveFlg: true
+            },{
+                where:{
+                    userId:decryptedUserId
+                }
+            })
+        }else {
+            await UserProfile.destroy({
+                where:{
+                    userId: decryptedUserId
+                }
+            })
+        }
 
+        res.status(201).send({
+            isSuccess: true,
+            message: `Successfully ${decision === "approve" ? "Approved":"Rejected"} Assistant Application in the platform`
+        })
+    }catch(e){
+        next(e)
+    }
+}
+
+const showPendingAssistantData = async (req,res,next)=>{
+    try{
+        const {applicantId} = req.params;
+
+        const user = await UserProfile.findOne({
+            where:{
+                userId: applicantId
+            }
+        })
+        res.status(201).send({
+            isSuccess: true,
+            message: "Successfully Retrieved Applicant's Information",
+            data: user.dataValues
+        })
     }catch(e){
         next(e)
     }
@@ -208,5 +249,6 @@ module.exports = {
     manageUsers,
     showUsers,
     showPendingListOfAssistantAccountApplication,
-    validateAssistantAccountRegisteration
+    validateAssistantAccountRegisteration,
+    showPendingAssistantData
 }
