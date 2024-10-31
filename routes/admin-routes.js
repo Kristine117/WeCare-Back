@@ -20,6 +20,7 @@ router.put("/user-manage/:userId/:operation",auth.verify,auth.verifyAdmin,manage
 
 router.put("/ratings-manage/:ratingId",auth.verify,manageRatings);
 
-router.put("/assistant-applicant/:applicantId",auth.verify,validateAssistantAccountRegisteration);
+router.put("/assistant-applicant/:applicantId",auth.verify,auth.verifyAdmin,validateAssistantAccountRegisteration);
 
+router.get("/assistant-details/:applicantId",auth.verify,auth.verifyAdmin,showPendingListOfAssistantAccountApplication);
 module.exports = router;
