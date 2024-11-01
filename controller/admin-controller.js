@@ -63,8 +63,7 @@ const manageUsers = async(req,res,next)=>{
         // const {password} = req.body;
         const newUserId = await exportDecryptedData(userId);
         const action = operation === "delete" ? "Deleted" : "Updated";
-        console.log(newUserId)
-        console.log(operation)
+    
         if(operation === "delete"){
             await UserProfile.update({
                 deleteFlg: true
@@ -98,9 +97,17 @@ const showUsers = async(req,res,next)=>{
     try{
 
         const allSeniors = await sequelize.query(`
-            select e.userId, (concat_ws(" ",e.firstname, 
-            e.lastname)) as fullName, e.email, 
-            e.userType,e.approveFlg from userprofile e
+            select e.userId, 
+            (concat_ws(" ",e.firstname, e.lastname)) as fullName, e.email, 
+            e.userType, e.approveFlg,
+            (case
+            when (select count(f.appointmentId) from appointment f 
+            where f.seniorId = e.userId 
+            or f.assistantId = e.userId
+            and f.statusId < 3
+            and f.endDate <= curdate()) > 0 then false
+            else true 
+            end) as canBeDeleted from userprofile e
             where e.userType = 'senior'
             and e.deleteFlg = false;
             `,{
@@ -109,9 +116,17 @@ const showUsers = async(req,res,next)=>{
 
 
         const allAssistants = await sequelize.query(`
-            select e.userId, (concat_ws(" ",e.firstname, 
-            e.lastname)) as fullName, e.email, 
-            e.userType,e.approveFlg from userprofile e
+            select e.userId, 
+            (concat_ws(" ",e.firstname, e.lastname)) as fullName, e.email, 
+            e.userType, e.approveFlg,
+            (case
+            when (select count(f.appointmentId) from appointment f 
+            where f.seniorId = e.userId 
+            or f.assistantId = e.userId
+            and f.statusId < 3
+            and f.endDate <= curdate()) > 0 then false
+            else true 
+            end) as canBeDeleted from userprofile e
             where e.userType = 'assistant'
             and e.deleteFlg = false;
             `,{
@@ -196,7 +211,7 @@ const validateAssistantAccountRegisteration = async(req,res,next)=>{
     try{
         const {userId,decision} = req.body;
         const decryptedUserId = await exportDecryptedData(userId);
-     
+
         if(decision==="approve"){
             await UserProfile.update({
                 approveFlg: true
@@ -206,9 +221,11 @@ const validateAssistantAccountRegisteration = async(req,res,next)=>{
                 }
             })
         }else {
-            await UserProfile.destroy({
+            await UserProfile.update({
+                deleteFlg: true
+            },{
                 where:{
-                    userId: decryptedUserId
+                    userId:decryptedUserId
                 }
             })
         }
@@ -225,12 +242,31 @@ const validateAssistantAccountRegisteration = async(req,res,next)=>{
 const showPendingAssistantData = async (req,res,next)=>{
     try{
         const {applicantId} = req.params;
-
+        const decryptedUserId = await exportDecryptedData(applicantId)
+        
+        const pulledData = await sequelize.query(`
+            
+            select e.userId, concat_ws(" ",e.firstname,e.lastname) as fullName,
+            e.profileImage,(TIMESTAMPDIFF (YEAR, e.birthDate, CURDATE()) ) as age,
+            e.email,e.contactNumber, f.experienceDescription,f.rate,e.registerDate 
+            from userprofile e
+            left join experience f
+            on e.experienceId = f.experienceId
+            where e.userId = :userId;`,{
+                replacements:{userId:+decryptedUserId},
+                type: QueryTypes.SELECT
+            })
+        
+            console.log(pulledData)
         const user = await UserProfile.findOne({
             where:{
-                userId: applicantId
+                userId: decryptedUserId
             }
         })
+
+        user.dataValues["userId"] = applicantId;
+
+        
         res.status(201).send({
             isSuccess: true,
             message: "Successfully Retrieved Applicant's Information",
@@ -238,6 +274,41 @@ const showPendingAssistantData = async (req,res,next)=>{
         })
     }catch(e){
         next(e)
+    }
+}
+
+const updateUserPassword = async( req,res,next)=>{
+
+
+    try{
+        const {userId} = req.params
+        const {password,confirmPassword}=  req.body;
+
+        const decryptedUserId = await exportDecryptedData(userId)
+        if(password === confirmPassword){
+
+            await UserProfile.update({
+                password: await bcrypt(password,saltRounds)
+            },{
+                where:{
+                    userId:+decryptedUserId
+                }
+            })
+            res.status(201).send({
+                isSuccess: true,
+                message: "Successfully Updated User Password!"
+            })
+        }else {
+            
+            res.status(200).send({
+                isSuccess: false,
+                message: "Passwords don't match! Please Try again"
+            })
+        }
+
+
+    }catch(e){
+        next(e);
     }
 }
 
@@ -250,5 +321,6 @@ module.exports = {
     showUsers,
     showPendingListOfAssistantAccountApplication,
     validateAssistantAccountRegisteration,
-    showPendingAssistantData
+    showPendingAssistantData,
+    updateUserPassword
 }

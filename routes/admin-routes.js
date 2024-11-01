@@ -4,7 +4,9 @@ const { adminHeaderCardsDetails,
     showUsers, showRatings, 
     showPendingListOfAssistantAccountApplication,
      manageUsers, manageRatings, 
-     validateAssistantAccountRegisteration } = require('../controller/admin-controller');
+     validateAssistantAccountRegisteration, 
+     showPendingAssistantData,
+     updateUserPassword} = require('../controller/admin-controller');
 
 const router = express.Router();
 
@@ -22,5 +24,7 @@ router.put("/ratings-manage/:ratingId",auth.verify,manageRatings);
 
 router.put("/assistant-applicant/:applicantId",auth.verify,auth.verifyAdmin,validateAssistantAccountRegisteration);
 
-router.get("/assistant-details/:applicantId",auth.verify,auth.verifyAdmin,showPendingListOfAssistantAccountApplication);
+router.get("/assistant-details/:applicantId",auth.verify,auth.verifyAdmin,showPendingAssistantData);
+
+router.put("/update-user/password/:userId",auth.verify,auth.verifyAdmin,updateUserPassword);
 module.exports = router;
