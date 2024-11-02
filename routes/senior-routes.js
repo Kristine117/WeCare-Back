@@ -4,9 +4,11 @@ const { findAssistantsForSenior,getAssistantList, addSenior } = require('../cont
 
 const router = express.Router();
 
-router.get("/find-assistants",auth.verify,findAssistantsForSenior)
+router.put("/find-assistants",auth.verify,
+    auth.verifySenior,findAssistantsForSenior)
 
-router.get("/assistant-list",auth.verify,getAssistantList);
+router.get("/assistant-list",auth.verify,
+    auth.verifySenior,getAssistantList);
 
 router.post("/add-senior", addSenior);
 
