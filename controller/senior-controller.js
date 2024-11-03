@@ -46,6 +46,8 @@ const getAssistantList = async(req,res,next)=>{
             }   
         ) 
 
+        console.log(results)
+
         const newResults = await results.map(async(val)=>{
             val.userId = await exportEncryptedData(String(val.userId));
 

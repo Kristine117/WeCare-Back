@@ -7,8 +7,7 @@ const router = express.Router();
 router.put("/find-assistants",auth.verify,
     auth.verifySenior,findAssistantsForSenior)
 
-router.get("/assistant-list",auth.verify,
-    auth.verifySenior,getAssistantList);
+router.get("/assistant-list",auth.verify,getAssistantList);
 
 router.post("/add-senior", addSenior);
 

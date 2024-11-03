@@ -21,7 +21,49 @@ const createAppointment = async(req,res,next)=>{
     } = req.body;   
     
     try{
+        const currentDate = new Date();
+        const currentDateConversion = `${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()}`;
 
+        const dateSelected = new Date(serviceDate);
+        const dateSelectedConversion = `${dateSelected.getFullYear()}-${dateSelected.getMonth()+1}-${dateSelected.getDate()}`;
+
+        console.log();
+        console.log(new Date(`${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()+1}`));
+
+        console.log(serviceDate);
+        console.log(`${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()}`)
+    
+        console.log();
+
+        if(currentDateConversion !== dateSelectedConversion){
+            return res.status(200).send({
+                isSuccess: false,
+                message: "Date Input does not match with Current Date"
+            })
+        }
+
+        if(new Date(startDate) > new Date(endDate)){
+            return res.status(200).send({
+                isSuccess: false,
+                message: "Start Date cannot be greater than End Date"
+            })
+        }
+
+        if(new Date(startDate) < new Date(serviceDate) || new Date(endDate) < new Date(serviceDate)){
+            return res.status(200).send({
+                isSuccess: false,
+                message: "Neither Start Date or End Date be less than Service Date"
+            })
+        }
+
+        if(+numberOfHours > 8){
+            return res.status(200).send({
+                isSuccess: false,
+                message: "Number of Hours cannot exceed more than eight hours"
+            })
+        }
+
+        
         const decAssistantId = Number(await exportDecryptedData(assistantId));
         
         const result = await sequelize.transaction(async (t)=>{
@@ -76,9 +118,9 @@ const createAppointment = async(req,res,next)=>{
         console.log('Emitting testEvent'); // Add this line
         console.log('Emitting testEvent'); // Add this line
 
-        io.emit('testEvent', {
-            message: "New message received"
-        });
+        // io.emit('testEvent', {
+        //     message: "New message received"
+        // });
       
     }catch(e){
         await t.rollback();
@@ -169,8 +211,8 @@ const getAppointmentList = async(req,res,next)=>{
                 else e.seniorId
             end as servingProfileId,
             case 
-                when e.endDate > curdate() then false
-                else true
+                when curdate() >= e.endDate then true
+                else false
             end as isExpired
             from Appointment e
             inner join UserProfile f
