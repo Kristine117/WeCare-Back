@@ -9,9 +9,7 @@ const { QueryTypes} = require("sequelize");
 const {io} = require("../index")
 
 const createAppointment = async(req,res,next)=>{
-    
     const t = await sequelize.transaction();
-
     const {
         assistantId,
         appointmentDate,
@@ -23,9 +21,51 @@ const createAppointment = async(req,res,next)=>{
     } = req.body;   
     
     try{
+        const currentDate = new Date();
+        const currentDateConversion = `${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()}`;
 
+        const dateSelected = new Date(serviceDate);
+        const dateSelectedConversion = `${dateSelected.getFullYear()}-${dateSelected.getMonth()+1}-${dateSelected.getDate()}`;
+
+        console.log();
+        console.log(new Date(`${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()+1}`));
+
+        console.log(serviceDate);
+        console.log(`${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()}`)
+    
+        console.log();
+
+        if(currentDateConversion !== dateSelectedConversion){
+            return res.status(200).send({
+                isSuccess: false,
+                message: "Date Input does not match with Current Date"
+            })
+        }
+
+        if(new Date(startDate) > new Date(endDate)){
+            return res.status(200).send({
+                isSuccess: false,
+                message: "Start Date cannot be greater than End Date"
+            })
+        }
+
+        if(new Date(startDate) < new Date(serviceDate) || new Date(endDate) < new Date(serviceDate)){
+            return res.status(200).send({
+                isSuccess: false,
+                message: "Neither Start Date or End Date be less than Service Date"
+            })
+        }
+
+        if(+numberOfHours > 8){
+            return res.status(200).send({
+                isSuccess: false,
+                message: "Number of Hours cannot exceed more than eight hours"
+            })
+        }
+
+        
         const decAssistantId = Number(await exportDecryptedData(assistantId));
-
+        
         const result = await sequelize.transaction(async (t)=>{
             const newStatus = await Status.findOne({
                 where:{
@@ -78,9 +118,9 @@ const createAppointment = async(req,res,next)=>{
         console.log('Emitting testEvent'); // Add this line
         console.log('Emitting testEvent'); // Add this line
 
-        io.emit('testEvent', {
-            message: "New message received"
-        });
+        // io.emit('testEvent', {
+        //     message: "New message received"
+        // });
       
     }catch(e){
         await t.rollback();
@@ -145,7 +185,7 @@ const getAppointmentList = async(req,res,next)=>{
         const appointmentList = await sequelize.query(
             `select distinct e.appointmentId, 
             e.totalAmount,e.serviceDescription,
-            e.numberOfHours, g.statusId, g.statusDescription,
+            e.numberOfHours, g.statusId, g.statusDescription, e.assistantId,
             (select h.userType from UserProfile h
             where h.userId = :kwanId) as loggedInUserType,
             case 
@@ -169,7 +209,11 @@ const getAppointmentList = async(req,res,next)=>{
             case 
                 when 'senior' = :kwanType then e.assistantId
                 else e.seniorId
-            end as servingProfileId
+            end as servingProfileId,
+            case 
+                when curdate() >= e.endDate then true
+                else false
+            end as isExpired
             from Appointment e
             inner join UserProfile f
               ON (('senior' = :kwanType AND e.seniorId = :kwanId)
@@ -187,6 +231,7 @@ const getAppointmentList = async(req,res,next)=>{
         const newAppointmentList = appointmentList.map(async(val)=>{
             val["appointmentId"] = await exportEncryptedData(String(val.appointmentId));
             val["servingProfileId"] = await exportEncryptedData(String(val.assistantId));
+            val["assistantId"] = await exportEncryptedData(String(val.assistantId));
             return val;
         })
         res.status(201).send({
