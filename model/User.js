@@ -18,13 +18,15 @@ sequelize.define('User', {
         email:{
             type:DataTypes.STRING,
             allowNull:false,
-            validate: {
-                len: {
-                    args:[10,20],
-                    msg: "Invalid length for email"
+            unique:true,
+            validate:{
+                len:{
+                    min:10,
+                    max: 255,
+                    msg:"Email Address length is invalid."
                 },
-                isEmail: {
-                    msg: "Email not recognize"
+                isEmail:{
+                    msg: "Invalid Email Format"
                 }
             }
         },
@@ -32,18 +34,15 @@ sequelize.define('User', {
         password:{
             type:DataTypes.STRING,
             allowNull:false,
-            validate: {
-                len: {
-                    args:[10,20],
-                    msg: "Invalid length for email"
-                },
-                isEmail: {
-                    msg: "Email not recognize"
+            validate:{
+                len:{
+                    max:255,
+                    msg:"Password length must be between 8 - 15 characters"
                 }
             }
+
         }
     
-
 },{
     tableName: 'user',
     timestamps:false

@@ -3,9 +3,10 @@ const sequelize = require('../db/dbconnection')
 
 const HealthStatus = sequelize.define('HealthStatus',{
     healthStatusId:{
-        type:DataTypes.INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false,
-        primaryKey:true
+        primaryKey: true,
+        autoIncrement: true
     },
     healthStatus:{
         type:DataTypes.STRING,

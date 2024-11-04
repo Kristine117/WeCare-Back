@@ -1,6 +1,13 @@
 const { DataTypes} = require('sequelize');
+<<<<<<< HEAD
 const sequelize = require('../db/dbconnection')
 const User = require('./User')
+=======
+
+const sequelize = require('../db/dbconnection')
+const User = require('./User')
+const ChatRoom = require('./ChatRoom')
+>>>>>>> 3b1b71f591c568801aa00341bd9973cae4ba9eea
 
 const Message = sequelize.define('Message',{
     messageId:{
@@ -29,7 +36,11 @@ const Message = sequelize.define('Message',{
     },
 
     messageContent:{
+<<<<<<< HEAD
         type:DataTypes.TEXT,
+=======
+        type:DataTypes.STRING,
+>>>>>>> 3b1b71f591c568801aa00341bd9973cae4ba9eea
         allowNull:false
     },
 
@@ -38,6 +49,17 @@ const Message = sequelize.define('Message',{
         allowNull:false
     },
 
+<<<<<<< HEAD
+=======
+    roomId: {
+        type:DataTypes.UUID,
+        allowNull:false,
+        references:{
+            model:ChatRoom,
+            key: 'roomId'
+        }
+    },
+>>>>>>> 3b1b71f591c568801aa00341bd9973cae4ba9eea
 
     date:{
         type:DataTypes.DATE,
@@ -48,8 +70,19 @@ const Message = sequelize.define('Message',{
     time:{
         type:DataTypes.TIME,
         allowNull:false
+<<<<<<< HEAD
     }
 
+=======
+    },
+    readFlag: {
+        type:DataTypes.BOOLEAN,
+        allowNull:false,
+        defaultValue:false
+    }
+
+
+>>>>>>> 3b1b71f591c568801aa00341bd9973cae4ba9eea
 },{
     tableName: 'message',
     timestamps: false

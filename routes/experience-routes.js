@@ -1,17 +1,12 @@
 const express = require('express');
-const { addNewExperienceHandler } = require('../controller/experience-controller');
+const { addNewExperienceHandler,getAllExperience, getSpecificExperience} = require('../controller/experience-controller');
 const router = express.Router();
 
 
-router.post("/register-experience",(req,res)=>{
-    const data = [
-        req.body['num_of_years'],
-        req.body['experience_description']
-    ]
+router.post("/register-experience",addNewExperienceHandler);
 
-    const result = addNewExperienceHandler(data);
-    return res.send(result);
-});
+router.get("/registered-experiences",getAllExperience);
 
+router.get("/getSpecific-experience/:expId", getSpecificExperience)
 
 module.exports = router;
