@@ -4,7 +4,7 @@ const Payment = require("./Payment");
 const UserProfile = require("./UserProfile");
 const Status = require("./Status");
 const Appointment = 
-sequelize.define('AppointmentRatings',{
+sequelize.define('Appointment',{
     appointmentId: {
         type: DataTypes.INTEGER,
         allowNull:false,

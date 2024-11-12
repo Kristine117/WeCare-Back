@@ -3,7 +3,8 @@ const Appointment = require("../model/Appointment")
 const sequelize = require("../db/dbconnection");
 
 exports.retrieveNotifs = async (req,res,next) => {
-    const {userId} = req.body;
+    const userId = req.headers.userid; // Try using lowercase here
+    console.log(userId); // Check if this outputs the expected userId
     const decryptedUserId =Number(await exportDecryptedData(userId.trim()));
     try{
 
@@ -36,23 +37,28 @@ exports.retrieveNotifs = async (req,res,next) => {
         LEFT JOIN userprofile us ON us.userId = a.seniorId
         LEFT JOIN userprofile ua ON ua.userId = a.assistantId
         WHERE u.userId = :loggedInUserId
-
         UNION ALL
         SELECT 
             a.*,
-                true AS isFromReminder,
-                CONCAT(ua.firstname, ' ', ua.lastname) AS loggedInUserFullName,
-                CONCAT(us.firstname, ' ', us.lastname)
-                AS otherPersonFullName,
-                CONCAT('You have set a reminder on your appointmnet  with ', CONCAT(us.firstname, ' ', us.lastname) ,' with a note : ',n.noteContent) AS message
-            FROM reminder r
-            JOIN note n ON  r.appointmentId = n.appointmentId
-            JOIN appointment a  ON r.appointmentId = a.appointmentId
-            LEFT JOIN userprofile us ON us.userId = a.seniorId
-            LEFT JOIN userprofile ua ON ua.userId = a.assistantId
-            WHERE ua.userId =  :loggedInUserId;
-    `;
+            true AS isFromReminder,
+            CONCAT(ua.firstname, ' ', ua.lastname) AS loggedInUserFullName,
+            CONCAT(us.firstname, ' ', us.lastname) AS otherPersonFullName,
+            CONCAT('You have set a reminder on your appointment with ', CONCAT(us.firstname, ' ', us.lastname), ' with a note: ', n.noteContent) AS message
+        FROM reminder r
+        JOIN note n ON r.noteId = n.noteId
+        JOIN appointment a ON n.appointmentId = a.appointmentId
+        LEFT JOIN userprofile us ON us.userId = a.seniorId
+        LEFT JOIN userprofile ua ON ua.userId = a.assistantId
+        WHERE ua.userId = :loggedInUserId
+        AND (
+            r.reminderDate < CURRENT_DATE
+            OR (r.reminderDate = CURRENT_DATE AND r.reminderTime <= CURRENT_TIME)
+        )
+
     
+
+    `;
+
         // Use sequelize.query to execute the raw query
         const notifs = await sequelize.query(query, {
             replacements: { loggedInUserId: decryptedUserId }, 
