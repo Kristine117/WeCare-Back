@@ -10,6 +10,112 @@ const relationship = require("../model/Relationship");
 const healthStatusModel = require("../model/HealthStatus");
 const xperience = require("../model/Experience");
 const { QueryTypes } = require("sequelize");
+const nodemailer = require('nodemailer');
+
+// Create transporter using SMTP
+// const transporter = nodemailer.createTransport({
+//     service: 'Gmail',  // Or replace with 'Yahoo' if using Yahoo
+//     auth: {
+//         user: process.env.EMAIL,
+//         pass: process.env.EMAIL_PASS,
+//     },
+//     tls: {
+//         rejectUnauthorized: false,
+//     },
+// });
+
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,  // or 587 for TLS
+    secure: true, // true for 465, false for other ports
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.EMAIL_PASS,
+    },
+    tls: {
+        rejectUnauthorized: false,
+    },
+});
+
+
+  // Test the connection
+transporter.verify((error, success) => {
+    if (error) {
+      console.log("Error setting up email:", error);
+    } else {
+      console.log("Email setup complete and ready to send.");
+    }
+  });
+
+  // Function to send a test email
+const sendTestEmail = async (req, res) => {
+    try {
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: 'tetsu.kala@gmail.com',  // Replace with the recipient's email
+            subject: 'Test Email from Node.js',
+            text: 'This is a test email sent from Node.js using Nodemailer!',
+        };
+
+        await transporter.sendMail(mailOptions);    
+        res.status(200).send("Test email sent successfully!");
+    } catch (error) {
+        console.error("Error sending email:", error);
+        res.status(500).send("Failed to send test email.");
+    }
+};
+
+const sendEmailForgotPassword = async (req, res, next) => {
+    try {
+        // Replace this with the source of the email, e.g., req.body.email if req.user.email is undefined
+        const email = req.body.email;
+
+        if (!email) {
+            return res.status(400).send("Email is required.");
+        }
+
+        const userInfo = await userProfile.findOne({
+            where: { email: email }
+        });
+        console.log(userInfo);
+
+        if (!userInfo) {
+            return res.status(404).send("User not found.");
+        }
+
+        //console.log(userInfo);
+        // Proceed with generating a reset link and sending the email here
+        
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: email, 
+            subject: 'We Care Password Change',
+            text: 'Hi ' +userInfo.firstname+' '+userInfo.lastname+` your password has been changed to @oahw2f13s1h6^` ,
+        };
+
+        // Generate a new temporary password
+        const tempPassword = "@oahw2f13s1h6^";
+
+        // Encrypt the password only if it's provided
+        let hashedPassword   = await bcrypt.hash(tempPassword, saltRounds);
+
+        // Update the user's password in the database
+       const passchange = await user.update(
+            { password: hashedPassword },
+            { where: { email: email } }
+        );
+        console.log(hashedPassword);
+        console.log(passchange);
+        
+        await transporter.sendMail(mailOptions);    
+        res.send("User found. Proceeding to send reset email.");
+        
+    } catch (error) {
+        console.error("Error sending email:", error);
+        res.status(500).send("Failed to send test email."); 
+    }
+}
+
 
 
 const addNewUserHandler = async (req, res, next) => {
@@ -518,5 +624,7 @@ module.exports = {
     retrieveListUserDetails,
     processProfile,
     getAssistantDetails,
-    fetchAllEmails
+    fetchAllEmails,
+    sendTestEmail,
+    sendEmailForgotPassword
 }

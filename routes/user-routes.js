@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { getUserDataUsingAuthenticationToken,
   updateUserHandlerForProfile,retrieveListUserDetails,processProfile,
-getAssistantDetails } = require('../controller/user-controller');
+getAssistantDetails, sendTestEmail, sendEmailForgotPassword } = require('../controller/user-controller');
 const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
@@ -37,6 +37,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage })
 
+router.get("/test-mail", sendTestEmail);
+
+router.post("/forgot-password", sendEmailForgotPassword);
 
 router.get("/user-profile",auth.verify,getUserDataUsingAuthenticationToken);
 
