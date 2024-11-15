@@ -5,7 +5,7 @@ exports.createReminder = async (req,res,next) => {
     const {noteId,reminderDate,reminderTime} = req.body;
    // const appointmentIdDecrypted =  Number(await exportDecryptedData(appointmentId.trim()));
     try{
-
+        console.log(noteId);
         const reminder =  await Reminder.create({
             noteId:noteId,
             reminderDate:reminderDate,
