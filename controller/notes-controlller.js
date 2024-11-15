@@ -1,6 +1,8 @@
 const { exportDecryptedData, exportEncryptedData } = require('../auth/secure');
 const Note = require('../model/Note')
-const Appointment = require('../model/Appointment')
+const Appointment = require('../model/Appointment');
+const { QueryTypes } = require('sequelize');
+const sequelize = require("../db/dbconnection");
 
 exports.createNote = async (req,res,next) => {
     const {noteContent ,appointmentId,isPinned, createdBy} = req.body;
@@ -74,6 +76,45 @@ exports.getALLNotes = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.getNotesWithSearch = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        const { appointmentId } = req.params;
+    
+        const creator = Number(await exportDecryptedData(userId.trim()));
+        const appointment = Number(await exportDecryptedData(appointmentId.trim()));
+    
+        console.log(creator);
+        console.log(appointment);
+        console.log(appointment);
+        console.log(appointment);
+
+        const retrieveNotes = await sequelize.query(
+            `SELECT * 
+            FROM note
+            WHERE createdBy = :id
+                AND (CASE 
+                        WHEN :appId = 0 THEN TRUE
+                        ELSE appointmentId = :appId
+                    END) 
+            ORDER BY isPinned DESC, updatedAt DESC`, {
+                replacements: { id: creator, appId: appointment},
+                type: QueryTypes.SELECT
+            }
+        )
+        
+        res.status(201).send({
+            isSuccess: true,
+            message: "Successfully Retrieved Notes",
+            data: retrieveNotes
+        })
+
+        console.log(retrieveNotes);
+    } catch(e){
+        next(e)
+    }
+}
 
 exports.deleteNote = async (req,res,next) => {
     const {noteId} = req.body;
