@@ -36,6 +36,7 @@ exports.setupReminderNotifications = (io) => {
 
         } catch (error) {
             console.error('Error processing reminders:', error);
+            
         }
     });
 };
