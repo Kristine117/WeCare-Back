@@ -198,7 +198,7 @@ const updateAppointment = async(req,res,next,io)=>{
 
         res.status(200).send({
             isSuccess: true,
-            message: `Successfully Process Appointment`
+            message: `Successfully Process Appointment with ${servingName}`
         })
 
         await t.commit();
