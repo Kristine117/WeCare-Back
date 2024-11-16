@@ -21,6 +21,7 @@ const createAppointment = async(req,res,next)=>{
     } = req.body;   
     
     try{
+        const {userId} = req.user;
         const currentDate = new Date();
         const currentDateConversion = `${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()}`;
 
@@ -55,9 +56,32 @@ const createAppointment = async(req,res,next)=>{
             })
         }
 
+        const countExisting = await sequelize.query(`
+            select count(e.appointmentId) as counted from appointment e
+            where e.seniorId = :userId
+            and ((
+            e.startDate >= :startDate and e.endDate <= :endDate)or(
+            e.startDate = :startDate) or
+            e.endDate = :endDate)`,{
+                replacements:{
+                    userId:userId,
+                    startDate:startDate,
+                    endDate:endDate
+                },
+                type:QueryTypes.SELECT
+            })
+            const newCount = countExisting[0]["counted"];
         
         const decAssistantId = Number(await exportDecryptedData(assistantId));
         
+        if(newCount >0){
+            return res.status(200).send({
+                isSuccess: false,
+                message: "You have conflicting schedule with this new appointment."
+            })
+        }
+
+
         const result = await sequelize.transaction(async (t)=>{
             const newStatus = await Status.findOne({
                 where:{
