@@ -2,6 +2,7 @@ const {DataTypes} = require ('sequelize');
 const sequelize = require('../db/dbconnection');
 const Appointment = require("./Appointment");
 const UserProfile = require("./UserProfile");
+const Reminder = require('./Reminder')
 const Status = require("./Status");
 
 const Notification = 
@@ -58,6 +59,15 @@ sequelize.define('Notification',{
     isFromReminder: {
         type:DataTypes.BOOLEAN,
         allowNull:false
+    },
+
+    reminderId:{
+        type:DataTypes.INTEGER,
+        allowNull:true,
+        references:{
+            model:Reminder,
+            key:'reminderId'
+        }
     }
 
 },{

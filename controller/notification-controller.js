@@ -25,7 +25,6 @@ exports.setupReminderNotifications = (io) => {
             // If there are upcoming reminders
             if (upcomingReminders.length > 0) {
                 console.log(`Upcoming reminders found: ${upcomingReminders.length}`);
-s
                  // Iterate through each reminder
                 for (let reminder of upcomingReminders) {
                     // Find the related appointment based on the appointmentId
@@ -39,7 +38,8 @@ s
                             assistantId: appointment.assistantId,
                             statusId: appointment.statusId,
                             readFlag: false,
-                            isFromReminder: true
+                            isFromReminder: true,
+                            reminderId:reminder.reminderId
                         });
                     } else {
                         console.log(`Appointment not found for reminderId: ${reminder.id}`);
