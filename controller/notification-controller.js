@@ -9,63 +9,126 @@ const { Op } = require('sequelize');
 exports.setupReminderNotifications = (io) => {
     // Schedule task to run every minute
     cron.schedule('* * * * *', async () => {
+
         console.log('Checking for upcoming reminders...');
+        
         try {
-            // Define the raw SQL query to get reminders due within the next 5 minutes
-            const query = `
-                SELECT * 
-                FROM reminder
-                WHERE reminderTime = NOW() 
-                AND reminderDate = CURRENT_DATE; 
-            `;
+        const query = `
+            SELECT *
+            FROM reminder r
+            WHERE (
+                r.reminderDate < CURRENT_DATE
+                OR (r.reminderDate = CURRENT_DATE AND r.reminderTime <= CONVERT_TZ(NOW(), '+00:00', '+08:00'))
+            )
+            AND r.reminderId NOT IN (
+                SELECT reminderId
+                FROM Notification
+                WHERE isFromReminder = true
+            );
+        `;
 
-            // Execute the raw query
-            const [upcomingReminders, metadata] = await sequelize.query(query);
+        const [unrecordedReminders] = await sequelize.query(query);
 
-            // If there are upcoming reminders
-            if (upcomingReminders.length > 0) {
-                console.log(`Upcoming reminders found: ${upcomingReminders.length}`);
-                 // Iterate through each reminder
-                for (let reminder of upcomingReminders) {
-                    // Find the related appointment based on the appointmentId
+        if (unrecordedReminders.length > 0) {
+            const createdNotifications = [];
+            for (let reminder of unrecordedReminders) {
+                try {
                     const appointment = await Appointment.findByPk(reminder.appointmentId);
-
                     if (appointment) {
-                        // Create a notification for each reminder
-                        await Notification.create({
+                        const notification = await Notification.create({
                             appointmentId: reminder.appointmentId,
                             seniorId: appointment.seniorId,
                             assistantId: appointment.assistantId,
                             statusId: appointment.statusId,
                             readFlag: false,
                             isFromReminder: true,
-                            reminderId:reminder.reminderId
+                            reminderId: reminder.reminderId,
                         });
+                        createdNotifications.push(notification);
                     } else {
-                        console.log(`Appointment not found for reminderId: ${reminder.id}`);
+                        console.warn(`Appointment not found for reminderId: ${reminder.reminderId}`);
                     }
+                } catch (error) {
+                    console.error(`Error processing reminderId ${reminder.reminderId}:`, error);
                 }
-
-
-                // Emit an event for new notifications
-                io.emit('newNotifsReceived', {
-                    message: "New reminder received",
-                    remindersCount: upcomingReminders.length, // You can pass other info as needed
-                });
-            } else {
-                console.log("No upcoming reminders found.");
             }
 
-        } catch (error) {
-            console.error('Error processing reminders:', error);
-            
+            if (createdNotifications.length > 0) {
+                io.emit('newNotifsReceived', {
+                    message: "New reminders received",
+                    remindersCount: createdNotifications.length,
+                });
+            }
+        } else {
+            console.log("No past reminders found to record.");
         }
+    } catch (error) {
+        console.error('Error processing reminders:', error);
+    }
     });
+};
+
+
+const recordPastReminders = async () => {
+    try {
+        const query = `
+            SELECT *
+            FROM reminder r
+            WHERE (
+                r.reminderDate < CURRENT_DATE
+                OR (r.reminderDate = CURRENT_DATE AND r.reminderTime <= CONVERT_TZ(NOW(), '+00:00', '+08:00'))
+            )
+            AND r.reminderId NOT IN (
+                SELECT reminderId
+                FROM Notification
+                WHERE isFromReminder = true
+            );
+        `;
+
+        const [unrecordedReminders] = await sequelize.query(query);
+
+        if (unrecordedReminders.length > 0) {
+            const createdNotifications = [];
+            for (let reminder of unrecordedReminders) {
+                try {
+                    const appointment = await Appointment.findByPk(reminder.appointmentId);
+                    if (appointment) {
+                        const notification = await Notification.create({
+                            appointmentId: reminder.appointmentId,
+                            seniorId: appointment.seniorId,
+                            assistantId: appointment.assistantId,
+                            statusId: appointment.statusId,
+                            readFlag: false,
+                            isFromReminder: true,
+                            reminderId: reminder.reminderId,
+                        });
+                        createdNotifications.push(notification);
+                    } else {
+                        console.warn(`Appointment not found for reminderId: ${reminder.reminderId}`);
+                    }
+                } catch (error) {
+                    console.error(`Error processing reminderId ${reminder.reminderId}:`, error);
+                }
+            }
+
+            if (createdNotifications.length > 0) {
+                io.emit('newNotifsReceived', {
+                    message: "New reminders received",
+                    remindersCount: createdNotifications.length,
+                });
+            }
+        } else {
+            console.log("No past reminders found to record.");
+        }
+    } catch (error) {
+        console.error('Error processing reminders:', error);
+    }
 };
 
 
 
 exports.retrieveNotifs = async (req,res,next) => {
+    recordPastReminders();
     const userId = req.headers.userid; // Try using lowercase here
     
     console.log(userId); // Check if this outputs the expected userId
