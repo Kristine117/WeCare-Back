@@ -171,7 +171,7 @@ const updateAppointment = async(req,res,next)=>{
 
         res.status(200).send({
             isSuccess: true,
-            message: `Successfully Process Appointment`
+            message: `Successfully Process Appointment with ${servingName}`
         })
 
         io.emit('newNotifsReceived', {
