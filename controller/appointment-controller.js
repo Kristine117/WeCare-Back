@@ -27,14 +27,6 @@ const createAppointment = async(req,res,next)=>{
         const dateSelected = new Date(serviceDate);
         const dateSelectedConversion = `${dateSelected.getFullYear()}-${dateSelected.getMonth()+1}-${dateSelected.getDate()}`;
 
-        console.log();
-        console.log(new Date(`${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()+1}`));
-
-        console.log(serviceDate);
-        console.log(`${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()}`)
-    
-        console.log();
-
         if(currentDateConversion !== dateSelectedConversion){
             return res.status(200).send({
                 isSuccess: false,
@@ -100,8 +92,6 @@ const createAppointment = async(req,res,next)=>{
 
             return newStatus;
         })
-
-
 
         res.status(201).send({
             isSuccess: true,
@@ -178,7 +168,7 @@ const getAppointmentList = async(req,res,next)=>{
                 userId: userId
             }
         });
-
+        
         const statusDescription = createStatusList(req.headers?.status,loggedinUser.dataValues?.userType);
         const userType =  loggedinUser?.dataValues.userType;
 
