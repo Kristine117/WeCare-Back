@@ -11,6 +11,8 @@ const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const { exportDecryptedData, exportEncryptedData } = require('./auth/secure');
 const {sendMessage, uploadFiles} = require('./controller/chat-controller');
+const { setupReminderNotifications } = require('./controller/notification-controller');
+
 
 // Models
 const UserProfile = require('./model/UserProfile');
@@ -66,7 +68,6 @@ app.use("/dashboard", dashboardRoutes);
 app.use("/senior",seniorRoutes);
 app.use("/payment",paymentRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use("/appointment",appointmentRoutes);
 app.use("/admin",adminRoutes);
 app.use("/notes",noteRoutes);
 app.use("/reminders",reminderRoutes);
@@ -92,6 +93,11 @@ const io = socketIo(server, {
         credentials: true
     }
 });
+
+
+
+// Initialize reminder notifications AFTER io is initialized
+setupReminderNotifications(io);
 
 
 // Session creation
@@ -141,6 +147,8 @@ async function startServer() {
         // Set up message routes and pass the io instance
         app.use("/chat", setupMessageRoutes(io));
 
+        app.use("/appointment",appointmentRoutes(io));
+
         server.listen(port, () => {
             console.log(`Server running at ${port}`);
         });
@@ -185,7 +193,6 @@ io.on('connection', (socket) => {
         console.log('User disconnected:', socket.id);
     });
 });
-
 
 
 
