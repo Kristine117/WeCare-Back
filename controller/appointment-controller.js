@@ -6,9 +6,10 @@ const Experience = require("../model/Experience");
 const sequelize = require("../db/dbconnection");
 const { exportDecryptedData, exportEncryptedData } = require("../auth/secure");
 const { QueryTypes} = require("sequelize");
-const {io} = require("../index")
 
-const createAppointment = async(req,res,next)=>{
+const Notification = require("../model/Notification")
+
+const createAppointment = async(req,res,next,io)=>{
     const t = await sequelize.transaction();
     const {
         assistantId,
@@ -29,6 +30,7 @@ const createAppointment = async(req,res,next)=>{
         const dateSelectedConversion = `${dateSelected.getFullYear()}-${dateSelected.getMonth()+1}-${dateSelected.getDate()}`;
 
         if(currentDateConversion !== dateSelectedConversion){
+            await t.rollback();
             return res.status(200).send({
                 isSuccess: false,
                 message: "Date Input does not match with Current Date"
@@ -36,6 +38,7 @@ const createAppointment = async(req,res,next)=>{
         }
 
         if(new Date(startDate) > new Date(endDate)){
+            await t.rollback();
             return res.status(200).send({
                 isSuccess: false,
                 message: "Start Date cannot be greater than End Date"
@@ -43,6 +46,7 @@ const createAppointment = async(req,res,next)=>{
         }
 
         if(new Date(startDate) < new Date(serviceDate) || new Date(endDate) < new Date(serviceDate)){
+            await t.rollback();
             return res.status(200).send({
                 isSuccess: false,
                 message: "Neither Start Date or End Date be less than Service Date"
@@ -50,6 +54,7 @@ const createAppointment = async(req,res,next)=>{
         }
 
         if(+numberOfHours > 8){
+            await t.rollback();
             return res.status(200).send({
                 isSuccess: false,
                 message: "Number of Hours cannot exceed more than eight hours"
@@ -101,7 +106,7 @@ const createAppointment = async(req,res,next)=>{
     
             const {userId} = req.user;
     
-            await Appointment.create({
+            const newAppointment = await Appointment.create({
                 seniorId: userId,
                 assistantId:decAssistantId,
                 appointmentDate:appointmentDate,
@@ -114,6 +119,19 @@ const createAppointment = async(req,res,next)=>{
                 serviceDescription:serviceDescription
             },{transaction: t})
 
+            const appointmentId =  newAppointment.appointmentId;
+
+            await Notification.create({
+                appointmentId:appointmentId,
+                seniorId: userId,
+                assistantId:decAssistantId,
+                statusId:1,
+                readFlag:false,
+                isFromReminder:false
+
+
+            },{ transaction: t });
+
             return newStatus;
         })
 
@@ -121,20 +139,11 @@ const createAppointment = async(req,res,next)=>{
             isSuccess: true,
             message: "Successfully Created Appointment"
         })
-        console.log('Emitting testEvent'); // Add this line
-        console.log('Emitting testEvent'); // Add this line
-        console.log('Emitting testEvent'); // Add this line
-        console.log('Emitting testEvent'); // Add this line
-        console.log('Emitting testEvent'); // Add this line
-        console.log('Emitting testEvent'); // Add this line
-        console.log('Emitting testEvent'); // Add this line
-        console.log('Emitting testEvent'); // Add this line
-        console.log('Emitting testEvent'); // Add this line
-        console.log('Emitting testEvent'); // Add this line
+      
 
-        // io.emit('testEvent', {
-        //     message: "New message received"
-        // });
+        io.emit('newNotifsReceived', {
+            message: "New message received"
+        });
       
     }catch(e){
         await t.rollback();
@@ -142,7 +151,7 @@ const createAppointment = async(req,res,next)=>{
     }
 }
 
-const updateAppointment = async(req,res,next)=>{
+const updateAppointment = async(req,res,next,io)=>{
     const t = await sequelize.transaction();
 
     try{
@@ -168,14 +177,34 @@ const updateAppointment = async(req,res,next)=>{
             }
         )
 
+        
+       // Retrieve the updated appointment details within the transaction
+        const updatedAppointment = await Appointment.findOne({
+            where: { appointmentId: convertedAppId },
+            transaction: t
+        });
+        console.log('hello')
+        //console.log(updatedAppointment)
+        // Create a notification with the updated appointment details
+        await Notification.create({
+            appointmentId: convertedAppId,
+            seniorId: updatedAppointment.dataValues.seniorId,
+            assistantId: updatedAppointment.dataValues.assistantId,
+            statusId: updatedAppointment.dataValues.statusId, 
+            readFlag: false,
+            isFromReminder:false
+        }, { transaction: t });
+
         res.status(200).send({
             isSuccess: true,
             message: `Successfully `
         })
 
-        io.emit('newNotifsReceived', {
-            message: "New message received"
-        });
+        await t.commit();
+
+        // io.emit('newNotifsReceived', {
+        //     message: "New message received"
+        // });
        
     }catch(e){
         console.log("error message")
