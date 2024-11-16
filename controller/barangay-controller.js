@@ -53,9 +53,40 @@ const getSpecificBrangay = async (req, res, next) => {
     }
 };
 
+const deleteSpecificBrg = async (req, res, next) => {
+    try {
+        // Retrieve the ID from req.params
+        const brgId = req.params.brgId;
+
+        // Ensure the ID is passed in a proper format
+        const deleteSpecificBrgByid = await Barangay.destroy({
+            where: {
+                barangayId: brgId  // Use the correct field name for your ID
+            }
+        });
+
+        if (!deleteSpecificBrgByid) {
+            return res.status(404).send({
+                isSuccess: false,
+                message: "Barangay not found or not deleted"
+            });
+        }
+
+        res.status(200).send({
+            isSuccess: true,
+            message: "Successfully deleted barangay"
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+
 
 module.exports = {
     addNewBarangayFuncHandler,
     getAllBarangays,
-    getSpecificBrangay
+    getSpecificBrangay,
+    deleteSpecificBrg
 }

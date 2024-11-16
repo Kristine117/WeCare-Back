@@ -22,19 +22,12 @@ const createAppointment = async(req,res,next,io)=>{
     } = req.body;   
     
     try{
+        const {userId} = req.user;
         const currentDate = new Date();
         const currentDateConversion = `${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()}`;
 
         const dateSelected = new Date(serviceDate);
         const dateSelectedConversion = `${dateSelected.getFullYear()}-${dateSelected.getMonth()+1}-${dateSelected.getDate()}`;
-
-        console.log();
-        console.log(new Date(`${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()+1}`));
-
-        console.log(serviceDate);
-        console.log(`${currentDate.getFullYear()}-${currentDate.getMonth()+1}-${currentDate.getDate()}`)
-    
-        console.log();
 
         if(currentDateConversion !== dateSelectedConversion){
             await t.rollback();
@@ -68,9 +61,32 @@ const createAppointment = async(req,res,next,io)=>{
             })
         }
 
+        const countExisting = await sequelize.query(`
+            select count(e.appointmentId) as counted from appointment e
+            where e.seniorId = :userId
+            and ((
+            e.startDate >= :startDate and e.endDate <= :endDate)or(
+            e.startDate = :startDate) or
+            e.endDate = :endDate)`,{
+                replacements:{
+                    userId:userId,
+                    startDate:startDate,
+                    endDate:endDate
+                },
+                type:QueryTypes.SELECT
+            })
+            const newCount = countExisting[0]["counted"];
         
         const decAssistantId = Number(await exportDecryptedData(assistantId));
         
+        if(newCount >0){
+            return res.status(200).send({
+                isSuccess: false,
+                message: "You have conflicting schedule with this new appointment."
+            })
+        }
+
+
         const result = await sequelize.transaction(async (t)=>{
             const newStatus = await Status.findOne({
                 where:{
@@ -118,8 +134,6 @@ const createAppointment = async(req,res,next,io)=>{
 
             return newStatus;
         })
-
-
 
         res.status(201).send({
             isSuccess: true,
@@ -207,7 +221,7 @@ const getAppointmentList = async(req,res,next)=>{
                 userId: userId
             }
         });
-
+        
         const statusDescription = createStatusList(req.headers?.status,loggedinUser.dataValues?.userType);
         const userType =  loggedinUser?.dataValues.userType;
 
