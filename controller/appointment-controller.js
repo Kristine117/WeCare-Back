@@ -147,11 +147,12 @@ const updateAppointment = async(req,res,next)=>{
 
     try{
         const {appId} = req.params;
-        const {servingName,status} =req.body;
+        const {servingName,result} =req.body;
         const convertedAppId = await exportDecryptedData(appId)
 
-        const resultParsed = status === 'accept'? "Approved Without Pay": "Rejected";
+        const resultParsed = result === 'accept'? "Approved Without Pay": "Rejected";
 
+        console.log(appId);
         const getStatus = await Status.findOne(
             {where: {
                 statusDescription: resultParsed
@@ -187,17 +188,17 @@ const updateAppointment = async(req,res,next)=>{
 const getAppointmentList = async(req,res,next)=>{
     try{
         const {userId} = req.user;
+        const {status} = req.body;
         const loggedinUser = await UserProfile.findOne({
             where:{
                 userId: userId
             }
         });
-        
-        const statusDescription = createStatusList(req.headers?.status,loggedinUser.dataValues?.userType);
+        const statusDescription = createStatusList(status,loggedinUser.dataValues?.userType);
         const userType =  loggedinUser?.dataValues.userType;
-
+ 
         const appointmentList = await sequelize.query(
-            `select distinct e.appointmentId, 
+            `select e.appointmentId, 
             e.totalAmount,e.serviceDescription,
             e.numberOfHours, g.statusId, g.statusDescription, e.assistantId,
             (select h.userType from UserProfile h
@@ -225,16 +226,22 @@ const getAppointmentList = async(req,res,next)=>{
                 else e.seniorId
             end as servingProfileId,
             case 
-                when curdate() >= e.endDate then true
+                when curdate() > e.endDate then true
                 else false
             end as isExpired
             from Appointment e
             inner join UserProfile f
-              ON (('senior' = :kwanType AND e.seniorId = :kwanId)
-            OR ('senior' != :kwanType AND e.assistantId = :kwanId))
+             on (case
+				when 'assistant' = :kwanType then e.assistantId
+                else e.seniorId
+                end ) = f.userId
             inner join Status g
             on e.statusId = g.statusId
             where g.statusDescription in (:statusDescription)
+            and (case
+				when 'assistant' = :kwanType then e.assistantId
+                else e.seniorId
+                end ) = :kwanId
             `,{
                 replacements: { kwanId: userId,
                     kwanType:userType,statusDescription: statusDescription},
