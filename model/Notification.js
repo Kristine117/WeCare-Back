@@ -53,6 +53,11 @@ sequelize.define('Notification',{
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false
+    },
+
+    isFromReminder: {
+        type:DataTypes.BOOLEAN,
+        allowNull:false
     }
 
 },{

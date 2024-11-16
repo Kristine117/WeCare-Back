@@ -1,7 +1,7 @@
 const { DataTypes} = require('sequelize');
 const sequelize = require('../db/dbconnection')
 const Note = require('./Note')
-
+const Appointment = require('./Appointment')
 
 const Reminder = sequelize.define('Reminder',{
     reminderId:{
@@ -19,6 +19,15 @@ const Reminder = sequelize.define('Reminder',{
             key : 'noteId'
         } 
    },
+   appointmentId: {
+    type: DataTypes.INTEGER,
+    allowNull:false,
+    references:{
+        model: Appointment,
+        key:'AppointmentId'
+    }
+},
+
 
    reminderDate:{
         type:DataTypes.DATE,

@@ -110,7 +110,9 @@ const createAppointment = async(req,res,next,io)=>{
                 seniorId: userId,
                 assistantId:decAssistantId,
                 statusId:1,
-                readFlag:false
+                readFlag:false,
+                isFromReminder:false
+
 
             },{ transaction: t });
 
@@ -175,7 +177,8 @@ const updateAppointment = async(req,res,next,io)=>{
             seniorId: updatedAppointment.dataValues.seniorId,
             assistantId: updatedAppointment.dataValues.assistantId,
             statusId: updatedAppointment.dataValues.statusId, 
-            readFlag: false
+            readFlag: false,
+            isFromReminder:false
         }, { transaction: t });
 
         res.status(200).send({

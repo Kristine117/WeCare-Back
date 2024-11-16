@@ -1,6 +1,7 @@
 const { exportDecryptedData, exportEncryptedData } = require('../auth/secure');
 const sequelize = require("../db/dbconnection");
-
+const Appointment = require('../model/Appointment')
+const Notification = require('../model/Notification')
 const cron = require('node-cron');
 const { Reminder } = require('../model/Reminder'); 
 const { Op } = require('sequelize');
@@ -14,8 +15,8 @@ exports.setupReminderNotifications = (io) => {
             const query = `
                 SELECT * 
                 FROM reminder
-                WHERE reminderTime <= NOW() + INTERVAL 5 MINUTE
-                AND reminderDate = CURRENT_DATE;  -- Adjust this as per your logic
+                WHERE reminderTime = NOW() 
+                AND reminderDate = CURRENT_DATE; 
             `;
 
             // Execute the raw query
@@ -24,6 +25,27 @@ exports.setupReminderNotifications = (io) => {
             // If there are upcoming reminders
             if (upcomingReminders.length > 0) {
                 console.log(`Upcoming reminders found: ${upcomingReminders.length}`);
+s
+                 // Iterate through each reminder
+                for (let reminder of upcomingReminders) {
+                    // Find the related appointment based on the appointmentId
+                    const appointment = await Appointment.findByPk(reminder.appointmentId);
+
+                    if (appointment) {
+                        // Create a notification for each reminder
+                        await Notification.create({
+                            appointmentId: reminder.appointmentId,
+                            seniorId: appointment.seniorId,
+                            assistantId: appointment.assistantId,
+                            statusId: appointment.statusId,
+                            readFlag: false,
+                            isFromReminder: true
+                        });
+                    } else {
+                        console.log(`Appointment not found for reminderId: ${reminder.id}`);
+                    }
+                }
+
 
                 // Emit an event for new notifications
                 io.emit('newNotifsReceived', {
@@ -51,85 +73,77 @@ exports.retrieveNotifs = async (req,res,next) => {
     try{
 
     const query = `
-       WITH LatestAppointments AS (
-            SELECT 
-                appointmentId,
-                MAX(createdAt) AS latestCreatedAt
-            FROM 
-                Notification
-            GROUP BY 
-                appointmentId
-        )
+     SELECT 
+    a.appointmentId,
+    a.seniorId,
+    a.assistantId,
+    a.statusId,
+    a.readFlag,
+    isFromReminder,
+    CONCAT(u.firstname, ' ', u.lastname) AS loggedInUserFullName,
+    CASE 
+        WHEN u.userType = 'senior' 
+            THEN CONCAT(ua.firstname, ' ', ua.lastname)
+        ELSE CONCAT(us.firstname, ' ', us.lastname)
+    END AS otherPersonFullName,
+    CASE 
+        WHEN u.userType = 'assistant' AND a.statusId = 1 
+            THEN CONCAT('You have a pending appointment request from ', CONCAT(us.firstname, ' ', us.lastname), ' that needs approval')
+        WHEN u.userType = 'assistant' AND a.statusId = 3 
+            THEN CONCAT('Your appointment with ', CONCAT(us.firstname, ' ', us.lastname), ' has been fully paid')
+        WHEN u.userType = 'senior' AND a.statusId = 2 
+            THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been approved')
+        WHEN u.userType = 'senior' AND a.statusId = 3 
+            THEN CONCAT('Your appointment with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been fully paid')
+        WHEN u.userType = 'senior' AND a.statusId = 4 
+            THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been rejected')
+    END AS message,
+    a.createdAt  -- Include createdAt field for sorting
+    FROM 
+        Notification a
+    JOIN 
+        userprofile u ON 
+            (u.userType = 'senior' AND u.userId = a.seniorId AND a.statusId IN (2, 3, 4))
+        OR 
+            (u.userType = 'assistant' AND u.userId = a.assistantId AND a.statusId IN (1, 3))
+    LEFT JOIN 
+        userprofile us ON us.userId = a.seniorId
+    LEFT JOIN 
+        userprofile ua ON ua.userId = a.assistantId
+    WHERE 
+        u.userId =  :loggedInUserId
+        AND  a.isFromReminder = 0
 
-        SELECT 
-            a.appointmentId,
-            a.seniorId,
-            a.assistantId,
-            a.statusId,
-            a.readFlag,
-            a.createdAt AS createdAt,
-            false AS isFromReminder,
-            CONCAT(u.firstname, ' ', u.lastname) AS loggedInUserFullName,
-            CASE 
-                WHEN u.userType = 'senior' 
-                    THEN CONCAT(ua.firstname, ' ', ua.lastname)
-                ELSE CONCAT(us.firstname, ' ', us.lastname)
-            END AS otherPersonFullName,
-            CASE 
-                WHEN u.userType = 'assistant' AND a.statusId = 1 
-                    THEN CONCAT('You have a pending appointment request from ', CONCAT(us.firstname, ' ', us.lastname), ' that needs approval')
-                WHEN u.userType = 'assistant' AND a.statusId = 3 
-                    THEN CONCAT('Your appointment with ', CONCAT(us.firstname, ' ', us.lastname), ' has been fully paid')
-                WHEN u.userType = 'senior' AND a.statusId = 2 
-                    THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been approved')
-                WHEN u.userType = 'senior' AND a.statusId = 3 
-                    THEN CONCAT('Your appointment with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been fully paid')
-                WHEN u.userType = 'senior' AND a.statusId = 4 
-                    THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been rejected')
-            END AS message
-        FROM 
-            Notification a
-        JOIN 
-            LatestAppointments la ON a.appointmentId = la.appointmentId AND a.createdAt = la.latestCreatedAt
-        JOIN 
-            userprofile u ON 
-                (u.userType = 'senior' AND u.userId = a.seniorId AND a.statusId IN (2, 3, 4))
-            OR 
-                (u.userType = 'assistant' AND u.userId = a.assistantId AND a.statusId IN (1, 3))
-        LEFT JOIN 
-            userprofile us ON us.userId = a.seniorId
-        LEFT JOIN 
-            userprofile ua ON ua.userId = a.assistantId
-        WHERE 
-            u.userId = :loggedInUserId
-        UNION ALL
-        SELECT 
-            a.appointmentId,
-            a.seniorId,
-            a.assistantId,
-            a.statusId,
-            a.readFlag,
-            a.appointmentDate as createdAt,
-            true AS isFromReminder,
-            CONCAT(ua.firstname, ' ', ua.lastname) AS loggedInUserFullName,
-            CONCAT(us.firstname, ' ', us.lastname) AS otherPersonFullName,
-            CONCAT('You have set a reminder on your appointment with ', CONCAT(us.firstname, ' ', us.lastname), ' with a note: ', n.noteContent) AS message
-        FROM 
-            Reminder r
-        JOIN 
-            note n ON r.noteId = n.noteId
-        JOIN 
-            appointment a ON n.appointmentId = a.appointmentId
-        LEFT JOIN 
-            userprofile us ON us.userId = a.seniorId
-        LEFT JOIN 
-            userprofile ua ON ua.userId = a.assistantId
-        WHERE 
-            ua.userId = :loggedInUserId
-            AND (
-                r.reminderDate < CURRENT_DATE
-                OR (r.reminderDate = CURRENT_DATE AND r.reminderTime <= CURRENT_TIME)
-            );
+    UNION ALL
+
+    SELECT 
+        a.appointmentId,
+        a.seniorId,
+        a.assistantId,
+        a.statusId,
+        a.readFlag,
+        isFromReminder,
+        CONCAT(ua.firstname, ' ', ua.lastname) AS loggedInUserFullName,
+        CONCAT(us.firstname, ' ', us.lastname) AS otherPersonFullName,
+        CONCAT('You have set a reminder on your appointment with ', CONCAT(us.firstname, ' ', us.lastname), ' with a note: ', n.noteContent) AS message,
+        r.createdAt  -- Include createdAt field for sorting
+    FROM 
+        Notification r
+    JOIN 
+        note n ON r.appointmentId = n.appointmentId 
+    JOIN 
+        appointment a ON n.appointmentId = r.appointmentId
+    LEFT JOIN 
+        userprofile us ON us.userId = a.seniorId
+    LEFT JOIN 
+        userprofile ua ON ua.userId = a.assistantId
+    WHERE 
+        ua.userId = :loggedInUserId
+        AND r.isFromReminder = 1
+
+    ORDER BY
+        createdAt DESC; 
+        
     `;
 
         // Use sequelize.query to execute the raw query
@@ -162,89 +176,81 @@ exports.retrieveNotifs = async (req,res,next) => {
 
  const getNotifCounts =async (decryptedUserId)=> {
      try{
-        const query = `WITH CombinedResult AS (
-            WITH LatestAppointments AS (
-                SELECT 
-                    appointmentId,
-                    MAX(createdAt) AS latestCreatedAt
-                FROM 
-                    Notification
-                GROUP BY 
-                    appointmentId
-            )
-            SELECT 
-                a.appointmentId,
-                a.seniorId,
-                a.assistantId,
-                a.statusId,
-                a.readFlag,
-                a.createdAt AS createdAt,
-                false AS isFromReminder,
-                CONCAT(u.firstname, ' ', u.lastname) AS loggedInUserFullName,
-                CASE 
-                    WHEN u.userType = 'senior' 
-                        THEN CONCAT(ua.firstname, ' ', ua.lastname)
-                    ELSE CONCAT(us.firstname, ' ', us.lastname)
-                END AS otherPersonFullName,
-                CASE 
-                    WHEN u.userType = 'assistant' AND a.statusId = 1 
-                        THEN CONCAT('You have a pending appointment request from ', CONCAT(us.firstname, ' ', us.lastname), ' that needs approval')
-                    WHEN u.userType = 'assistant' AND a.statusId = 3 
-                        THEN CONCAT('Your appointment with ', CONCAT(us.firstname, ' ', us.lastname), ' has been fully paid')
-                    WHEN u.userType = 'senior' AND a.statusId = 2 
-                        THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been approved')
-                    WHEN u.userType = 'senior' AND a.statusId = 3 
-                        THEN CONCAT('Your appointment with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been fully paid')
-                    WHEN u.userType = 'senior' AND a.statusId = 4 
-                        THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been rejected')
-                END AS message
-            FROM 
-                Notification a
-            JOIN 
-                LatestAppointments la ON a.appointmentId = la.appointmentId AND a.createdAt = la.latestCreatedAt
-            JOIN 
-                userprofile u ON 
-                    (u.userType = 'senior' AND u.userId = a.seniorId AND a.statusId IN (2, 3, 4))
-                OR 
-                    (u.userType = 'assistant' AND u.userId = a.assistantId AND a.statusId IN (1, 3))
-            LEFT JOIN 
-                userprofile us ON us.userId = a.seniorId
-            LEFT JOIN 
-                userprofile ua ON ua.userId = a.assistantId
-            WHERE 
-                u.userId = :loggedInUserId
-            UNION ALL
-            SELECT 
-                a.appointmentId,
-                a.seniorId,
-                a.assistantId,
-                a.statusId,
-                a.readFlag,
-                a.appointmentDate as createdAt,
-                true AS isFromReminder,
-                CONCAT(ua.firstname, ' ', ua.lastname) AS loggedInUserFullName,
-                CONCAT(us.firstname, ' ', us.lastname) AS otherPersonFullName,
-                CONCAT('You have set a reminder on your appointment with ', CONCAT(us.firstname, ' ', us.lastname), ' with a note: ', n.noteContent) AS message
-            FROM 
-                Reminder r
-            JOIN 
-                note n ON r.noteId = n.noteId
-            JOIN 
-                appointment a ON n.appointmentId = a.appointmentId
-            LEFT JOIN 
-                userprofile us ON us.userId = a.seniorId
-            LEFT JOIN 
-                userprofile ua ON ua.userId = a.assistantId
-            WHERE 
-                ua.userId = :loggedInUserId
-                AND (
-                    r.reminderDate < CURRENT_DATE
-                    OR (r.reminderDate = CURRENT_DATE AND r.reminderTime <= CURRENT_TIME)
-                )
-        )
+        const query = `
         SELECT COUNT(*) AS unreadCount
-        FROM CombinedResult
-        WHERE readFlag = 0;
+FROM (
+    SELECT 
+        a.appointmentId,
+        a.seniorId,
+        a.assistantId,
+        a.statusId,
+        a.readFlag,
+        isFromReminder,
+        CONCAT(u.firstname, ' ', u.lastname) AS loggedInUserFullName,
+        CASE 
+            WHEN u.userType = 'senior' 
+                THEN CONCAT(ua.firstname, ' ', ua.lastname)
+            ELSE CONCAT(us.firstname, ' ', us.lastname)
+        END AS otherPersonFullName,
+        CASE 
+            WHEN u.userType = 'assistant' AND a.statusId = 1 
+                THEN CONCAT('You have a pending appointment request from ', CONCAT(us.firstname, ' ', us.lastname), ' that needs approval')
+            WHEN u.userType = 'assistant' AND a.statusId = 3 
+                THEN CONCAT('Your appointment with ', CONCAT(us.firstname, ' ', us.lastname), ' has been fully paid')
+            WHEN u.userType = 'senior' AND a.statusId = 2 
+                THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been approved')
+            WHEN u.userType = 'senior' AND a.statusId = 3 
+                THEN CONCAT('Your appointment with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been fully paid')
+            WHEN u.userType = 'senior' AND a.statusId = 4 
+                THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been rejected')
+        END AS message,
+        a.createdAt  
+    FROM 
+        Notification a
+    JOIN 
+        userprofile u ON 
+            (u.userType = 'senior' AND u.userId = a.seniorId AND a.statusId IN (2, 3, 4))
+        OR 
+            (u.userType = 'assistant' AND u.userId = a.assistantId AND a.statusId IN (1, 3))
+    LEFT JOIN 
+        userprofile us ON us.userId = a.seniorId
+    LEFT JOIN 
+        userprofile ua ON ua.userId = a.assistantId
+    WHERE 
+        u.userId = :loggedInUserId
+        AND a.isFromReminder = 0
+         AND a.readFlag = 0
+
+    UNION ALL
+
+    SELECT 
+        a.appointmentId,
+        a.seniorId,
+        a.assistantId,
+        a.statusId,
+        a.readFlag,
+        isFromReminder,
+        CONCAT(ua.firstname, ' ', ua.lastname) AS loggedInUserFullName,
+        CONCAT(us.firstname, ' ', us.lastname) AS otherPersonFullName,
+        CONCAT('You have set a reminder on your appointment with ', CONCAT(us.firstname, ' ', us.lastname), ' with a note: ', n.noteContent) AS message,
+        r.createdAt  -- Include createdAt field for sorting
+    FROM 
+        Notification r
+    JOIN 
+        note n ON r.appointmentId = n.appointmentId 
+    JOIN 
+        appointment a ON n.appointmentId = r.appointmentId
+    LEFT JOIN 
+        userprofile us ON us.userId = a.seniorId
+    LEFT JOIN 
+        userprofile ua ON ua.userId = a.assistantId
+    WHERE 
+        ua.userId = :loggedInUserId
+        AND r.isFromReminder = 1
+        AND r.readFlag = 0
+) AS CombinedResults
+
+
         `;
         const result = await sequelize.query(query, {
             replacements: { loggedInUserId: decryptedUserId },
@@ -255,6 +261,6 @@ exports.retrieveNotifs = async (req,res,next) => {
     
      }catch(error){
         console.log(error);
-        next(error)
+       
      }
 }
