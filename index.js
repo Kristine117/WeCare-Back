@@ -5,8 +5,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const multer = require('multer');
-
 const app = express();
+
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const { exportDecryptedData, exportEncryptedData } = require('./auth/secure');
@@ -37,6 +37,7 @@ const reminderRoutes = require("./routes/reminder-routes");
 const assistantRoutes = require("./routes/assistant-routes");
 const emergencyRoutes = require("./routes/emergency-routes");
 const notifRoutes = require("./routes/notification-routes")
+
 // Port
 const port = process.env.PORT || 4000;
 
@@ -74,13 +75,13 @@ app.use("/reminders",reminderRoutes);
 app.use("/assistant",assistantRoutes);
 app.use("/emergency", emergencyRoutes);
 app.use("/notifications",notifRoutes);
+
 // Serve uploaded files
 app.get('/download/:filename', (req, res) => {
     const file = path.join(__dirname, 'uploads', req.params.filename);
     res.download(file);  // This forces the browser to download the image
 });
 app.use('/profilePictures', express.static(path.join(__dirname, 'profilePictures')));
-
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -94,13 +95,10 @@ const io = socketIo(server, {
     }
 });
 
-
-
 // Initialize reminder notifications AFTER io is initialized
 setupReminderNotifications(io);
 
 
-// Session creation
 const sessionStore = new MySQLStore(options);
 
 app.use(session({
@@ -111,13 +109,17 @@ app.use(session({
     saveUninitialized: false,
 }));
 
-// Optionally use onReady() to get a promise that resolves when store is ready.
 sessionStore.onReady().then(() => {
-    // MySQL session store ready for use.
+
     console.log('MySQLStore ready');
 }).catch(error => {
-    // Something went wrong.
     console.error(error);
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err);  // Log the error
+    res.status(500).send("Something went wrong");
 });
 
 
@@ -158,12 +160,10 @@ async function startServer() {
     }
 }
 
-
 // Socket.IO connection handler
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    socket.emit('testEvent', { message: 'Hello from server!' });
 
     socket.on('joinRoom', ({ roomId, senderId }) => {
         // Join the client to the specified room
@@ -187,17 +187,15 @@ io.on('connection', (socket) => {
     });
 
 
-
-
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
     });
 });
 
 
-
 startServer();
 
 
 module.exports = { io };
+
 
