@@ -1,7 +1,17 @@
 const express = require("express");
-const {retrieveNotifs,} = require ("../controller/notification-controller")
+const {retrieveNotifs,updateNotifReadFlag} = require ("../controller/notification-controller")
 const router = express.Router();
 
-router.get("/getAllNotifs", retrieveNotifs);
+const notifRoute = (io)=> {
+    router.get("/getAllNotifs", retrieveNotifs);
 
-module.exports = router;
+    router.update("/updateNotifReadFlag" ,(res,req,next)=>{
+        updateNotifReadFlag(res,req,next,io);
+    });
+
+    return router;
+
+}
+
+
+module.exports = notifRoute;

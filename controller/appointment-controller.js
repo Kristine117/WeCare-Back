@@ -126,10 +126,9 @@ const createAppointment = async(req,res,next,io)=>{
                 seniorId: userId,
                 assistantId:decAssistantId,
                 statusId:1,
-                readFlag:false,
+                seniorReadFlag:false,
+                assistantReadFlag:false,
                 isFromReminder:false
-
-
             },{ transaction: t });
 
             return newStatus;
@@ -192,7 +191,8 @@ const updateAppointment = async(req,res,next,io)=>{
             seniorId: updatedAppointment.dataValues.seniorId,
             assistantId: updatedAppointment.dataValues.assistantId,
             statusId: updatedAppointment.dataValues.statusId, 
-            readFlag: false,
+            seniorReadFlag:false,
+            assistantReadFlag:false,
             isFromReminder:false
         }, { transaction: t });
 
