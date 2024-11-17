@@ -70,7 +70,6 @@ app.use("/senior",seniorRoutes);
 app.use("/payment",paymentRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/admin",adminRoutes);
-app.use("/notes",noteRoutes);
 app.use("/reminders",reminderRoutes);
 app.use("/assistant",assistantRoutes);
 app.use("/emergency", emergencyRoutes);
@@ -152,6 +151,8 @@ async function startServer() {
         app.use("/appointment",appointmentRoutes(io));
 
         app.use("/notifications",notifRoutes(io));
+
+        app.use("/notes",noteRoutes(io));
 
         server.listen(port, () => {
             console.log(`Server running at ${port}`);

@@ -1,10 +1,13 @@
 const { exportDecryptedData, exportEncryptedData } = require('../auth/secure');
 const Note = require('../model/Note')
-const Appointment = require('../model/Appointment');
+const Notification = require('../model/Notification')
 const { QueryTypes } = require('sequelize');
+const Reminder = require('../model/Reminder')
 const sequelize = require("../db/dbconnection");
+const {  Op } = require('sequelize'); // Add Op here
 
 exports.createNote = async (req,res,next) => {
+    
     const {noteContent ,appointmentId,isPinned, createdBy} = req.body;
    
     const creator =  Number(await exportDecryptedData(createdBy.trim()));
@@ -116,34 +119,70 @@ exports.getNotesWithSearch = async (req, res, next) => {
     }
 }
 
-exports.deleteNote = async (req,res,next) => {
+exports.deleteNote = async (req,res,next,io) => {
     const {noteId} = req.body;
+
+    try {
+        // Start a transaction to ensure atomicity
+        const result = await sequelize.transaction(async (transaction) => {
+            // Step 1: Delete notifications connected to reminders linked to the note
+            const deleteNotifications = await Notification.destroy({
+                where: {
+                    reminderId: {
+                        [Op.in]: sequelize.literal(`(SELECT reminderId FROM Reminder WHERE noteId = ${noteId})`),
+                    },
+                },
+                transaction,
+            });
     
-    try{
-        const deleteMessage = await Note.destroy({
-            where:{
-                noteId:noteId
+            console.log(`Deleted ${deleteNotifications} notifications.`);
+    
+            // Step 2: Delete reminders connected to the note
+            const deleteReminders = await Reminder.destroy({
+                where: {
+                    noteId: noteId,
+                },
+                transaction,
+            });
+    
+            console.log(`Deleted ${deleteReminders} reminders.`);
+    
+            // Step 3: Delete the note itself
+            const deleteNote = await Note.destroy({
+                where: {
+                    noteId: noteId,
+                },
+                transaction,
+            });
+    
+            if (deleteNote === 0) {
+                throw new Error("Note not found."); // Roll back if the note does not exist
             }
-        })
+    
+            console.log("Deleted the note successfully.");
 
-       // Check if a note was deleted
-       if (deleteMessage === 0) {
-        return res.status(404).send({
-            isSuccess: false,
-            message: "Note not found."
+            io.emit('newNotifsReceived', {
+                message: "New notifs received",
+               
+            });
+    
+            return deleteNote;
         });
-     }
-
-    // Respond with success if a note was deleted
-    return res.status(200).send({
-        isSuccess: true,
-        message: "Note successfully deleted."
-    });  
-
-
-    }catch(error){
-        next(error)
+    
+        // Respond with success
+        return res.status(200).send({
+            isSuccess: true,
+            message: "Note, reminders, and notifications successfully deleted.",
+        });
+    } catch (error) {
+        // Handle errors and respond or pass to middleware
+        console.error("Error during deletion:", error);
+        return res.status(500).send({
+            isSuccess: false,
+            message: "An error occurred during deletion.",
+        });
     }
+    
 }
 
 exports.updateNote = async (req,res,next) => {
