@@ -29,6 +29,16 @@ const createAppointment = async(req,res,next,io)=>{
         const dateSelected = new Date(serviceDate);
         const dateSelectedConversion = `${dateSelected.getFullYear()}-${dateSelected.getMonth()+1}-${dateSelected.getDate()}`;
 
+        const date1 = new Date(startDate);
+        const date2 = new Date(endDate);
+
+        let Difference_In_Time =
+    date2.getTime() - date1.getTime();
+
+    let Difference_In_Days =
+    Math.round
+        (Difference_In_Time / (1000 * 3600 * 24));
+
         if(currentDateConversion !== dateSelectedConversion){
             await t.rollback();
             return res.status(200).send({
@@ -115,7 +125,7 @@ const createAppointment = async(req,res,next,io)=>{
                 endDate:endDate,
                 statusId: newStatus.dataValues.statusId,
                 numberOfHours:numberOfHours,
-                totalAmount: assistantRate[0]['rate'] * numberOfHours,
+                totalAmount: assistantRate[0]['rate'] * numberOfHours * Difference_In_Days,
                 serviceDescription:serviceDescription
             },{transaction: t})
 
