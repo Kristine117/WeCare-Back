@@ -278,6 +278,7 @@ const getAppointmentList = async(req,res,next)=>{
 				when 'assistant' = :kwanType then e.assistantId
                 else e.seniorId
                 end ) = :kwanId
+                order by e.endDate DESC
             `,{
                 replacements: { kwanId: userId,
                     kwanType:userType,statusDescription: statusDescription},
