@@ -134,6 +134,7 @@ exports.retrieveNotifs = async (req,res,next) => {
     const userId = req.headers.userid; // Try using lowercase here
     
     console.log(userId); // Check if this outputs the expected userId
+
     const decryptedUserId =Number(await exportDecryptedData(userId.trim()));
     try{
 
@@ -161,7 +162,7 @@ exports.retrieveNotifs = async (req,res,next) => {
         WHEN u.userType = 'assistant' AND a.statusId = 3 
             THEN CONCAT('Your appointment with ', CONCAT(us.firstname, ' ', us.lastname), ' has been fully paid')
         WHEN u.userType = 'senior' AND a.statusId = 2 
-            THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been approved')
+            THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been approved. Please review the appointment details and proceed with the payment to confirm.')
         WHEN u.userType = 'senior' AND a.statusId = 3 
             THEN CONCAT('Your appointment with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been fully paid')
         WHEN u.userType = 'senior' AND a.statusId = 4 
@@ -179,12 +180,11 @@ exports.retrieveNotifs = async (req,res,next) => {
         userprofile us ON us.userId = a.seniorId
     LEFT JOIN 
         userprofile ua ON ua.userId = a.assistantId
+        JOIN appointment ap ON a.statusId = ap.statusId AND ap.appointmentId = a.appointmentId
     WHERE 
         u.userId =  :loggedInUserId
         AND  a.isFromReminder = 0
-
     UNION ALL
-
     SELECT 
         r.notificationId,
         a.appointmentId,
@@ -314,7 +314,7 @@ exports.updateNotifReadFlag = async (req, res, next,io) => {
                     WHEN u.userType = 'assistant' AND a.statusId = 3 
                         THEN CONCAT('Your appointment with ', CONCAT(us.firstname, ' ', us.lastname), ' has been fully paid')
                     WHEN u.userType = 'senior' AND a.statusId = 2 
-                        THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been approved')
+                        THEN CONCAT('Your appointment request with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been approved. Please review the appointment details and proceed with the payment to confirm.')
                     WHEN u.userType = 'senior' AND a.statusId = 3 
                         THEN CONCAT('Your appointment with ', CONCAT(ua.firstname, ' ', ua.lastname), ' has been fully paid')
                     WHEN u.userType = 'senior' AND a.statusId = 4 
@@ -332,10 +332,14 @@ exports.updateNotifReadFlag = async (req, res, next,io) => {
                     userprofile us ON us.userId = a.seniorId
                 LEFT JOIN 
                     userprofile ua ON ua.userId = a.assistantId
+                JOIN appointment ap ON a.statusId = ap.statusId AND ap.appointmentId = a.appointmentId
                 WHERE 
                     u.userId =  :loggedInUserId
                     AND  a.isFromReminder = 0
-
+                    AND (
+                        (u.userType = 'senior' AND a.seniorReadFlag = 0) OR 
+                        (u.userType = 'assistant' AND a.assistantReadFlag = 0)
+                    )
                 UNION ALL
 
                 SELECT 
@@ -364,11 +368,11 @@ exports.updateNotifReadFlag = async (req, res, next,io) => {
                 WHERE 
                     ua.userId = :loggedInUserId
                     AND r.isFromReminder = 1
-                            
+                    AND r.assistantReadFlag = 0
                         ) AS CombinedResults;
 
-
             `;
+
             const result = await sequelize.query(query, {
                 replacements: { loggedInUserId: decryptedUserId },
                 type: sequelize.QueryTypes.SELECT,
