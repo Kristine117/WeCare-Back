@@ -152,15 +152,14 @@ const createAppointment = async(req,res,next,io)=>{
 
 const updateAppointment = async(req,res,next,io)=>{
     const t = await sequelize.transaction();
-
     try{
         const {appId} = req.params;
         const {servingName,result} =req.body;
+   
         const convertedAppId = await exportDecryptedData(appId)
 
-        const resultParsed = result === 'accept'? "Approved Without Pay": "Rejected";
+        const resultParsed = result === 'approve'? "Approved Without Pay": "Rejected";
 
-        console.log(appId);
         const getStatus = await Status.findOne(
             {where: {
                 statusDescription: resultParsed
@@ -180,36 +179,45 @@ const updateAppointment = async(req,res,next,io)=>{
         
        // Retrieve the updated appointment details within the transaction
         const updatedAppointment = await Appointment.findOne({
-            where: { appointmentId: convertedAppId },
-            transaction: t
+            where: { appointmentId: convertedAppId }
         });
-        console.log('hello')
+        
+        console.log("Updateasdhfasd")
+        console.log(updateAppointment)
         //console.log(updatedAppointment)
         // Create a notification with the updated appointment details
-        await Notification.create({
-            appointmentId: convertedAppId,
-            seniorId: updatedAppointment.dataValues.seniorId,
-            assistantId: updatedAppointment.dataValues.assistantId,
-            statusId: updatedAppointment.dataValues.statusId, 
-            seniorReadFlag:false,
-            assistantReadFlag:false,
-            isFromReminder:false
-        }, { transaction: t });
+
+        
+        const resultNotif = await sequelize.transaction(async(t)=>{
+
+
+            const notifCreate = await Notification.create({
+                appointmentId: convertedAppId,
+                seniorId: updatedAppointment.dataValues.seniorId,
+                assistantId: updatedAppointment.dataValues.assistantId,
+                statusId: updatedAppointment.dataValues.statusId, 
+                assistantReadFlag:false,
+                isFromReminder:false,
+                readFlag: false,
+                isFromReminder:false
+            }, { transaction: t });
+
+            return notifCreate;
+        })
+
 
         res.status(200).send({
             isSuccess: true,
             message: `Successfully Process Appointment with ${servingName}`
         })
 
-        await t.commit();
-
         // io.emit('newNotifsReceived', {
         //     message: "New message received"
         // });
        
     }catch(e){
-        console.log("error message")
         console.log(e.message)
+        await t.rollback();
         next(e)
     }
 }   
@@ -217,15 +225,17 @@ const updateAppointment = async(req,res,next,io)=>{
 const getAppointmentList = async(req,res,next)=>{
     try{
         const {userId} = req.user;
-        const {status} = req.body;
+        const {status} = req.headers;
         const loggedinUser = await UserProfile.findOne({
             where:{
                 userId: userId
             }
         });
+
+   
         const statusDescription = createStatusList(status,loggedinUser.dataValues?.userType);
         const userType =  loggedinUser?.dataValues.userType;
- 
+    
         const appointmentList = await sequelize.query(
             `select e.appointmentId, 
             e.totalAmount,e.serviceDescription,
@@ -233,7 +243,7 @@ const getAppointmentList = async(req,res,next)=>{
             (select h.userType from UserProfile h
             where h.userId = :kwanId) as loggedInUserType,
             case 
-                when 'senior' = :kwanType then
+                when 'senior' =     :kwanType then
                 (select concat_ws(" ",ef.firstName, ef.lastName) 
                 from UserProfile ef
                 where ef.userId = e.assistantId)
@@ -255,7 +265,7 @@ const getAppointmentList = async(req,res,next)=>{
                 else e.seniorId
             end as servingProfileId,
             case 
-                when curdate() > e.endDate then true
+                when date(now()) >= e.endDate then true
                 else false
             end as isExpired
             from Appointment e
@@ -305,7 +315,7 @@ function createStatusList(value,userType){
     switch(value){
         case "ongoing":
             statusList.push("Pending");
-        
+           
             break;
         default:
             statusList.push("Approved Without Pay");

@@ -10,7 +10,7 @@ router.post("/create-appointment",auth.verify,(res,req,next)=>{
     createAppointment(res,req,next,io);
 });
 
-router.put("/update-appointment/:appId",auth.verify,(res,req,next,io)=>{
+router.put("/update-appointment/:appId",auth.verify,(res,req,next)=>{
     updateAppointment(res,req,next,io);
 });
 
