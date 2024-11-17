@@ -139,6 +139,7 @@ exports.retrieveNotifs = async (req,res,next) => {
 
     const query = `
      SELECT 
+    a.notificationId,
     a.appointmentId,
     a.seniorId,
     a.assistantId,
@@ -185,6 +186,7 @@ exports.retrieveNotifs = async (req,res,next) => {
     UNION ALL
 
     SELECT 
+        r.notificationId,
         a.appointmentId,
         a.seniorId,
         a.assistantId,
@@ -243,7 +245,9 @@ exports.retrieveNotifs = async (req,res,next) => {
 }
 
 exports.updateNotifReadFlag = async (req, res, next,io) => {
-    const { notificationIdPk, userType } = req.body;
+    const { notificationId, userType } = req.body;
+
+    console.log(notificationId)
 
     try {
         // Determine the flag to update based on userType
@@ -260,7 +264,7 @@ exports.updateNotifReadFlag = async (req, res, next,io) => {
         const updatedRows = await Notification.update(
             updateField,
             {
-                where: { notificationIdPk } // Condition to find the notification
+                where: { notificationId } // Condition to find the notification
             }
         );
 
@@ -360,11 +364,8 @@ exports.updateNotifReadFlag = async (req, res, next,io) => {
                 WHERE 
                     ua.userId = :loggedInUserId
                     AND r.isFromReminder = 1
-
-                ORDER BY
-                    createdAt DESC;
-                    AND r.assistantReadFlag = 0
-            ) AS CombinedResults
+                            
+                        ) AS CombinedResults;
 
 
             `;

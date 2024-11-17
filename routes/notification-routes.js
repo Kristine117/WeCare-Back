@@ -5,7 +5,7 @@ const router = express.Router();
 const notifRoute = (io)=> {
     router.get("/getAllNotifs", retrieveNotifs);
 
-    router.update("/updateNotifReadFlag" ,(res,req,next)=>{
+    router.put("/updateNotifReadFlag" ,(res,req,next)=>{
         updateNotifReadFlag(res,req,next,io);
     });
 
