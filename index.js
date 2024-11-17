@@ -73,7 +73,6 @@ app.use("/admin",adminRoutes);
 app.use("/reminders",reminderRoutes);
 app.use("/assistant",assistantRoutes);
 app.use("/emergency", emergencyRoutes);
-app.use("/notifications",notifRoutes);
 app.use("/ratings",ratingsRoutes);
 
 // Serve uploaded files
