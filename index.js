@@ -11,7 +11,7 @@ const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const { exportDecryptedData, exportEncryptedData } = require('./auth/secure');
 const {sendMessage, uploadFiles} = require('./controller/chat-controller');
-const { setupReminderNotifications } = require('./controller/notification-controller');
+const { setupReminderNotifications ,recordPastReminders} = require('./controller/notification-controller');
 
 
 // Models
@@ -97,7 +97,6 @@ const io = socketIo(server, {
 
 // Initialize reminder notifications AFTER io is initialized
 setupReminderNotifications(io);
-
 
 const sessionStore = new MySQLStore(options);
 
