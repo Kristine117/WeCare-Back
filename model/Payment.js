@@ -7,9 +7,9 @@ sequelize.define('Payment',{
     
     paymentId: {
         type: DataTypes.INTEGER,
-        autoIncrement:true,
         allowNull:false,
-        primaryKey:true  
+        primaryKey:true,
+        autoIncrement: true
     },
 
     paymentMethod: {
