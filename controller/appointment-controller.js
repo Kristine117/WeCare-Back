@@ -126,10 +126,9 @@ const createAppointment = async(req,res,next,io)=>{
                 seniorId: userId,
                 assistantId:decAssistantId,
                 statusId:1,
-                readFlag:false,
+                seniorReadFlag:false,
+                assistantReadFlag:false,
                 isFromReminder:false
-
-
             },{ transaction: t });
 
             return newStatus;
@@ -187,6 +186,7 @@ const updateAppointment = async(req,res,next,io)=>{
         console.log(updateAppointment)
         //console.log(updatedAppointment)
         // Create a notification with the updated appointment details
+
         
         const resultNotif = await sequelize.transaction(async(t)=>{
 
@@ -196,12 +196,15 @@ const updateAppointment = async(req,res,next,io)=>{
                 seniorId: updatedAppointment.dataValues.seniorId,
                 assistantId: updatedAppointment.dataValues.assistantId,
                 statusId: updatedAppointment.dataValues.statusId, 
+                assistantReadFlag:false,
+                isFromReminder:false,
                 readFlag: false,
                 isFromReminder:false
             }, { transaction: t });
 
             return notifCreate;
         })
+
 
         res.status(200).send({
             isSuccess: true,

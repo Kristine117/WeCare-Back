@@ -151,6 +151,8 @@ async function startServer() {
 
         app.use("/appointment",appointmentRoutes(io));
 
+        app.use("/notifications",notifRoutes(io));
+
         server.listen(port, () => {
             console.log(`Server running at ${port}`);
         });
