@@ -74,7 +74,7 @@ app.use("/notes",noteRoutes);
 app.use("/reminders",reminderRoutes);
 app.use("/assistant",assistantRoutes);
 app.use("/emergency", emergencyRoutes);
-app.use("/notifications",notifRoutes);
+
 
 // Serve uploaded files
 app.get('/download/:filename', (req, res) => {
@@ -149,6 +149,8 @@ async function startServer() {
         app.use("/chat", setupMessageRoutes(io));
 
         app.use("/appointment",appointmentRoutes(io));
+
+        app.use("/notifications",notifRoutes(io));
 
         server.listen(port, () => {
             console.log(`Server running at ${port}`);

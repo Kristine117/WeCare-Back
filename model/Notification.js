@@ -8,7 +8,7 @@ const Status = require("./Status");
 const Notification = 
 sequelize.define('Notification',{
 
-    NotificationId: {
+    notificationId: {
         type: DataTypes.INTEGER,
         allowNull:false,
         primaryKey:true,
@@ -50,7 +50,13 @@ sequelize.define('Notification',{
         }
     },
 
-    readFlag: {
+    seniorReadFlag: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    },
+
+    assistantReadFlag: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false
