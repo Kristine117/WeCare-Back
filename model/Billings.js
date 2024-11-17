@@ -1,6 +1,7 @@
 const {DataTypes} = require ('sequelize');
 const sequelize = require('../db/dbconnection');
 const Appointment = require("./Appointment");
+
 const Billings = 
 sequelize.define('Billings',{
     billingId: {
