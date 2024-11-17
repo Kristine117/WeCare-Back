@@ -86,7 +86,7 @@ const createAppointment = async(req,res,next,io)=>{
             })
         }
 
-
+  
         const result = await sequelize.transaction(async (t)=>{
             const newStatus = await Status.findOne({
                 where:{
