@@ -182,12 +182,6 @@ const updateAppointment = async(req,res,next,io)=>{
             where: { appointmentId: convertedAppId }
         });
         
-        console.log("Updateasdhfasd")
-        console.log(updateAppointment)
-        //console.log(updatedAppointment)
-        // Create a notification with the updated appointment details
-
-        
         const resultNotif = await sequelize.transaction(async(t)=>{
 
 
@@ -211,9 +205,9 @@ const updateAppointment = async(req,res,next,io)=>{
             message: `Successfully Process Appointment with ${servingName}`
         })
 
-        // io.emit('newNotifsReceived', {
-        //     message: "New message received"
-        // });
+        io.emit('newNotifsReceived', {
+            message: "New message received"
+        });
        
     }catch(e){
         console.log(e.message)

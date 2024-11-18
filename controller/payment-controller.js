@@ -57,6 +57,28 @@ const processPayment = async(req,res,next)=>{
             }
         })
 
+           // Retrieve the updated appointment details within the transaction
+           const updatedAppointment = await Appointment.findOne({
+            where: { appointmentId: convertedAppId }
+        });
+        
+        const resultNotif = await sequelize.transaction(async(t)=>{
+
+
+            const notifCreate = await Notification.create({
+                appointmentId: convertedAppId,
+                seniorId: updatedAppointment.dataValues.seniorId,
+                assistantId: updatedAppointment.dataValues.assistantId,
+                statusId: updatedAppointment.dataValues.statusId, 
+                assistantReadFlag:false,
+                isFromReminder:false,
+                readFlag: false,
+                isFromReminder:false
+            }, { transaction: t });
+
+            return notifCreate;
+        })
+
        res.status(201).send({
         isSuccess: true,
         message: "Successfully paid the appointment"
