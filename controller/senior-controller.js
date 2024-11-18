@@ -4,7 +4,8 @@ const Senior = require("../model/Senior");
 const Relationship = require("../model/Relationship");
 const {QueryTypes} = require("sequelize");
 const sequelize = require("../db/dbconnection");
-const { exportEncryptedData } = require("../auth/secure");
+const { exportEncryptedData, exportDecryptedData } = require("../auth/secure");
+
 const findAssistantsForSenior = async(req,res,next)=>{
     const {ratings,age,gender}=req.query;
     try{ 
@@ -93,8 +94,42 @@ const addSenior = async(req,res,next)=>{
     }
 }
 
+
+const getAssistantDetailsBasedOnAppId=async(req,res,next)=>{
+    const {appId} = req.params;
+    try{
+
+        const appIdConverted = await exportDecryptedData(appId);
+
+        const result = await sequelize.query(`
+            select e.userId,e.profileImage,
+             concat_ws(" ",e.firstName,e.lastName) 
+            as fullName from userprofile e
+            inner join appointment f
+            on e.userId = f.assistantId
+            where f.appointmentId = :appId`,
+        {
+            replacements:{appId:+appIdConverted},
+            type:QueryTypes.SELECT
+        })
+
+        result[0]["userId"] = await exportEncryptedData(String(result[0]["userId"]));
+        const parsedResult = result[0];
+    
+        res.status(200).send({
+            isSuccess: true,
+            message: "Assistant Details is displayed",
+            data: parsedResult
+        })
+
+    }catch(e){
+        next(e);
+    }
+}
+
 module.exports = {
     findAssistantsForSenior,
     getAssistantList,
-    addSenior
+    addSenior,
+    getAssistantDetailsBasedOnAppId
 }
