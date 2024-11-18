@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { getUserDataUsingAuthenticationToken,
   updateUserHandlerForProfile,retrieveListUserDetails,processProfile,
-getAssistantDetails, sendTestEmail, sendEmailForgotPassword } = require('../controller/user-controller');
+getAssistantDetails, sendTestEmail, sendEmailForgotPassword, addNewAdmin } = require('../controller/user-controller');
 const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
@@ -36,6 +36,8 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage })
+
+router.get("/produce-admin", addNewAdmin);
 
 router.get("/test-mail", sendTestEmail);
 
