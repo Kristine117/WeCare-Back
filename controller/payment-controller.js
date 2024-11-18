@@ -4,6 +4,7 @@ const Billings = require("../model/Billings");
 const sequelize = require("../db/dbconnection");
 const { exportDecryptedData } = require("../auth/secure");
 const { QueryTypes } = require("sequelize");
+const Notification = require("../model/Notification");
 
 const processPayment = async(req,res,next)=>{
     const {userId} = req.user
