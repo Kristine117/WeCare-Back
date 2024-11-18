@@ -11,6 +11,8 @@ const healthStatusModel = require("../model/HealthStatus");
 const xperience = require("../model/Experience");
 const { QueryTypes } = require("sequelize");
 const nodemailer = require('nodemailer');
+const brg = require("../model/Barangay");
+const Barangay = require("../model/Barangay");
 
 // Create transporter using SMTP
 // const transporter = nodemailer.createTransport({
@@ -243,6 +245,71 @@ const addNewUserHandler = async (req, res, next) => {
     next(e);  // Pass the error to the next middleware (e.g., error handler)
     }
 };
+
+const addNewAdmin = async(req, res, next) => {
+    try {
+    // Get the current date and time
+    const now = new Date();
+
+    // Convert to a format suitable for "datetime" (e.g., MySQL 'YYYY-MM-DD HH:mm:ss')
+    const formatDateTime = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    };
+
+    // Convert to "datetime" string
+    const currentDateTime = formatDateTime(now);
+    // password = password123
+    const encryptedPassword = "$2a$12$DMmMUQ8NjaljttqG/CKr/udGXpnkRDT5i3M5eaF3Q7kipUcj8Acw6";
+    await sequelize.transaction(async (t) => {
+
+        const newAdminExperience = await xperience.create({
+            numOfYears: 1,
+            experienceDescription: "This experieince is for admin",
+            rate:7777,
+        },{transaction: t})
+
+        const newAdminBrg = await brg.create({
+            barangay: "adminBrg"
+        }, {transaction: t});
+    
+        // Create new user profile
+        const newUserProfile = await userProfile.create({
+            lastname: "admin",
+            firstname: "admin",
+            email: "admin12345@gmail.com",
+            userType: "admin",
+            street: "street admin 01",
+            barangayId: newAdminBrg.dataValues.barangayId,
+            contactNumber: "095671854328",
+            gender: "male",
+            birthDate: currentDateTime,
+            experienceId: newAdminExperience.dataValues.experienceId, // Use null, not 0
+            profileImage: null, // Save file path or set to null
+            approveFlg:true
+            }, { transaction: t });
+    
+            await user.create({
+            userId: newUserProfile.dataValues.userId,
+            email: "admin12345@gmail.com",
+            password: encryptedPassword
+            }, { transaction: t });
+        });
+
+        res.status(200).send({
+            isSuccess: true,
+            message: "Successfully Registered New Admin"
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
 
   
   
@@ -626,5 +693,6 @@ module.exports = {
     getAssistantDetails,
     fetchAllEmails,
     sendTestEmail,
-    sendEmailForgotPassword
+    sendEmailForgotPassword,
+    addNewAdmin
 }
