@@ -95,16 +95,7 @@ const createAppointment = async(req,res,next,io)=>{
                 message: "You have conflicting schedule with this new appointment."
             })
         }
-
-  
-        const result = await sequelize.transaction(async (t)=>{
-            const newStatus = await Status.findOne({
-                where:{
-                    statusDescription: "Pending"
-                }
-            })
-    
-            const assistantRate = await sequelize.query(
+        const assistantRate = await sequelize.query(
             `SELECT e.rate from Experience e 
             inner join UserProfile f
             on e.experienceId = f.experienceId
@@ -113,6 +104,15 @@ const createAppointment = async(req,res,next,io)=>{
                     type: QueryTypes.SELECT
                 }   
             ) 
+
+            console.log(assistantRate[0]['rate'] * numberOfHours * Difference_In_Days);
+  
+        const result = await sequelize.transaction(async (t)=>{
+            const newStatus = await Status.findOne({
+                where:{
+                    statusDescription: "Pending"
+                }
+            })
     
             const {userId} = req.user;
     
@@ -155,7 +155,7 @@ const createAppointment = async(req,res,next,io)=>{
         });
       
     }catch(e){
-        await t.rollback();
+    
         next(e);
     }
 }
