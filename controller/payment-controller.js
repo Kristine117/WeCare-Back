@@ -17,14 +17,14 @@ const processPayment = async(req,res,next)=>{
         const composedTime = `${dateNow.getHours()}:${dateNow.getMinutes()}:${dateNow.getSeconds()}`;
         
         const queryAppDetails = await sequelize.query(`
-            select e.totalAmount,e.numberOfHours,
+            select e.totalAmount,e.serviceDescription,e.numberOfHours,
         DATEDIFF(e.enddate, e.startdate) as countDays from Appointment e
         where e.appointmentId = :appId`,
         {replacements:{appId:+convertedAppId},
         type: QueryTypes.SELECT})
         
 
-        const {totalAmount,numberOfHours,countDays} = queryAppDetails[0]
+        const {totalAmount,serviceDescription,numberOfHours,countDays} = queryAppDetails[0]
         const hoursBilled = numberOfHours * countDays;
        const createPayment = await sequelize.transaction(async(t)=>{
 
@@ -38,7 +38,7 @@ const processPayment = async(req,res,next)=>{
             await Billings.create({
                 appointmentId:+convertedAppId,
                 time:composedTime,
-                serviceProvided: "Some Service",
+                serviceProvided: serviceDescription,
                 hoursBilled: hoursBilled,
                 payMethod:paymentMethod,
                 totalPay:totalAmount
