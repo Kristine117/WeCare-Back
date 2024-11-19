@@ -3,6 +3,7 @@ const { QueryTypes } = require("sequelize");
 const sequelize = require("../db/dbconnection");
 const UserProfile = require("../model/UserProfile");
 const Appointment = require("../model/Appointment");
+const { exportEncryptedData, exportDecryptedData } = require("../auth/secure");
 
 const showConnectedSeniorList = async(req,res,next)=>{
     try {
@@ -31,18 +32,17 @@ const showConnectedSeniorList = async(req,res,next)=>{
 
 const getSeniorListRequest = async(req,res,next)=>{
     try{
+        const {userId} = req.user;
         const results = await sequelize.query(
-            `SELECT u.userId, u.email, u.profileImage, 
-            u.gender, CONCAT_WS(" ", u.firstName, 
-            u.lastName) AS fullName, e.experienceDescription, 
-            e.numOfYears, e.rate, CONCAT_WS(" ", b.barangay, u.street)
-             AS assistant_address, (SELECT COUNT(*) FROM ratings 
-             r WHERE r.ratingsId = u.userId) AS reviews,
-             TIMESTAMPDIFF(YEAR, u.birthDate, CURDATE()) AS 
-             assistant_age FROM userprofile u INNER JOIN 
-             experience e ON e.experienceId = u.experienceId 
-             INNER JOIN barangay b ON b.barangayId = u.barangayId 
-             WHERE u.userType = "assistant"`,{
+            `SELECT u.userId, 
+		        u.email, 
+                u.profileImage, 
+                u.gender, 
+                CONCAT_WS(" ", u.firstName, u.lastName) AS fullName
+                FROM userprofile u 
+                INNER JOIN  appointment e ON e.seniorId = u.userId 
+                WHERE u.userType = "senior" and e.statusId = 1  and e.assistantId = :userId `,{
+                replacements: {userId:userId},
                 type: QueryTypes.SELECT
             }   
         ) 
@@ -50,6 +50,7 @@ const getSeniorListRequest = async(req,res,next)=>{
         console.log(results)
 
         const newResults = await results.map(async(val)=>{
+
             val.userId = await exportEncryptedData(String(val.userId));
 
             return val;

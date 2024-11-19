@@ -162,7 +162,7 @@ async function startServer() {
 
         userController.addNewAdmin();
         statusController.addNewStatus();
-
+ 
         server.listen(port, () => {
             console.log(`Server running at ${port}`);
         });
