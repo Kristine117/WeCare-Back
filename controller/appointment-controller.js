@@ -271,7 +271,8 @@ const getAppointmentList = async(req,res,next)=>{
             case 
                 when date(now()) >= e.endDate then true
                 else false
-            end as isExpired
+            end as isExpired,
+            count(ar.appointmentId) as rated
             from Appointment e
             inner join UserProfile f
              on (case
@@ -280,11 +281,14 @@ const getAppointmentList = async(req,res,next)=>{
                 end ) = f.userId
             inner join Status g
             on e.statusId = g.statusId
+            left join appointmentratings ar
+            on ar.appointmentId = e.appointmentId
             where g.statusDescription in (:statusDescription)
             and (case
 				when 'assistant' = :kwanType then e.assistantId
                 else e.seniorId
                 end ) = :kwanId
+                group by e.appointmentId
                 order by e.endDate DESC
             `,{
                 replacements: { kwanId: userId,
