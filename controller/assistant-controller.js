@@ -1,3 +1,4 @@
+
 const { QueryTypes } = require("sequelize");
 const sequelize = require("../db/dbconnection");
 const UserProfile = require("../model/UserProfile");
@@ -27,6 +28,9 @@ const showConnectedSeniorList = async(req,res,next)=>{
         next(e)
     }
 }
+
+
+
 
 module.exports = {
     showConnectedSeniorList

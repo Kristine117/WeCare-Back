@@ -64,8 +64,6 @@ const processPayment = async(req,res,next)=>{
         });
         
         const resultNotif = await sequelize.transaction(async(t)=>{
-
-
             const notifCreate = await Notification.create({
                 appointmentId: convertedAppId,
                 seniorId: updatedAppointment.dataValues.seniorId,
