@@ -246,40 +246,40 @@ const addNewUserHandler = async (req, res, next) => {
     }
 };
 
-const addNewAdmin = async(req, res, next) => {
+const addNewAdmin = async () => {
     try {
-    // Get the current date and time
-    const now = new Date();
-
-    // Convert to a format suitable for "datetime" (e.g., MySQL 'YYYY-MM-DD HH:mm:ss')
-    const formatDateTime = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    };
-
-    // Convert to "datetime" string
-    const currentDateTime = formatDateTime(now);
-    // password = password123
-    const encryptedPassword = "$2a$12$DMmMUQ8NjaljttqG/CKr/udGXpnkRDT5i3M5eaF3Q7kipUcj8Acw6";
-    await sequelize.transaction(async (t) => {
-
-        const newAdminExperience = await xperience.create({
+      await sequelize.transaction(async (t) => {
+        const encryptedPassword = "$2a$12$DMmMUQ8NjaljttqG/CKr/udGXpnkRDT5i3M5eaF3Q7kipUcj8Acw6";
+  
+        // Check if admin already exists
+        const existingAdmin = await user.findOne({
+          where: { email: "admin12345@gmail.com" },
+          transaction: t,
+        });
+  
+        if (existingAdmin) {
+          console.log("Admin with this email already exists. Skipping creation.");
+          return;
+        }
+  
+        const newAdminExperience = await xperience.create(
+          {
             numOfYears: 1,
-            experienceDescription: "This experieince is for admin",
-            rate:7777,
-        },{transaction: t})
-
-        const newAdminBrg = await brg.create({
-            barangay: "adminBrg"
-        }, {transaction: t});
-    
-        // Create new user profile
-        const newUserProfile = await userProfile.create({
+            experienceDescription: "This experience is for admin",
+            rate: 7777,
+          },
+          { transaction: t }
+        );
+  
+        const newAdminBrg = await brg.create(
+          {
+            barangay: "Pasil",
+          },
+          { transaction: t }
+        );
+  
+        const newUserProfile = await userProfile.create(
+          {
             lastname: "admin",
             firstname: "admin",
             email: "admin12345@gmail.com",
@@ -288,28 +288,31 @@ const addNewAdmin = async(req, res, next) => {
             barangayId: newAdminBrg.dataValues.barangayId,
             contactNumber: "095671854328",
             gender: "male",
-            birthDate: currentDateTime,
-            experienceId: newAdminExperience.dataValues.experienceId, // Use null, not 0
-            profileImage: null, // Save file path or set to null
-            approveFlg:true
-            }, { transaction: t });
-    
-            await user.create({
+            birthDate: new Date(),
+            experienceId: newAdminExperience.dataValues.experienceId,
+            profileImage: null,
+            approveFlg: true,
+          },
+          { transaction: t }
+        );
+  
+        await user.create(
+          {
             userId: newUserProfile.dataValues.userId,
             email: "admin12345@gmail.com",
-            password: encryptedPassword
-            }, { transaction: t });
-        });
-
-        res.status(200).send({
-            isSuccess: true,
-            message: "Successfully Registered New Admin"
-        });
-
+            password: encryptedPassword,
+          },
+          { transaction: t }
+        );
+  
+        console.log("Admin initialized successfully.");
+      });
     } catch (error) {
-        next(error);
+      console.error("Error initializing admin:", error);
+      throw error;
     }
-}
+  };
+  
 
   
   

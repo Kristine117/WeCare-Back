@@ -38,6 +38,12 @@ const assistantRoutes = require("./routes/assistant-routes");
 const emergencyRoutes = require("./routes/emergency-routes");
 const notifRoutes = require("./routes/notification-routes")
 const ratingsRoutes  = require("./routes/ratings-routes");
+const status = require("./routes/status-routes");
+
+// Controller
+const userController = require("./controller/user-controller");
+const statusController = require("./controller/status-controller");
+
 // Port
 const port = process.env.PORT || 4000;
 
@@ -74,6 +80,7 @@ app.use("/reminders",reminderRoutes);
 app.use("/assistant",assistantRoutes);
 app.use("/emergency", emergencyRoutes);
 app.use("/ratings",ratingsRoutes);
+app.use("/status",status);
 
 // Serve uploaded files
 app.get('/download/:filename', (req, res) => {
@@ -152,6 +159,9 @@ async function startServer() {
         app.use("/notifications",notifRoutes(io));
 
         app.use("/notes",noteRoutes(io));
+
+        userController.addNewAdmin();
+        statusController.addNewStatus();
 
         server.listen(port, () => {
             console.log(`Server running at ${port}`);
