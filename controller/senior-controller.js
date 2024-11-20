@@ -7,17 +7,19 @@ const sequelize = require("../db/dbconnection");
 const { exportEncryptedData, exportDecryptedData } = require("../auth/secure");
 
 const findAssistantsForSenior = async(req,res,next)=>{
-    const {ratings,age,gender}=req.query;
+    const {ratings,age,gender}=req.headers;
     try{ 
-        
-        const results = await sequelize.query(
-            `select userid, email, from UserProfile 
-            inner join Ratings 
-            on userId = assistant_id
-            where userId > 0`,{
-                type: QueryTypes.SELECT
-            }   
-        ) 
+
+        console.log(ratings);
+        const results = [];
+        // const results = await sequelize.query(
+        //     `select userid, email, from UserProfile 
+        //     inner join Ratings 
+        //     on userId = assistant_id
+        //     where userId > 0`,{
+        //         type: QueryTypes.SELECT
+        //     }   
+        // ) 
 
         res.status(201).send({
             isSuccess: true,
