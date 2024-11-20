@@ -265,7 +265,7 @@ const addNewAdmin = async () => {
         const newAdminExperience = await xperience.create(
           {
             numOfYears: 1,
-            experienceDescription: "This experience is for admin",
+            experienceDescription: "This experience is for dummy experience",
             rate: 7777,
           },
           { transaction: t }
@@ -312,8 +312,6 @@ const addNewAdmin = async () => {
       throw error;
     }
   };
-  
-
   
   
 
@@ -462,7 +460,7 @@ const updateUserHandlerForProfile = async (req, res, next) => {
             birthDate,
             street,
             profileImage: profileImagePath || null,
-            experienceId: experienceId || null
+            experienceId: experienceId || 1
         };
 
         // Prepare data for user account update
