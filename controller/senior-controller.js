@@ -95,19 +95,19 @@ AND (
 const getAssistantList = async(req,res,next)=>{
     try{
         const results = await sequelize.query(
-    `SELECT u.userId, u.email, u.profileImage, 
-    u.gender, CONCAT_WS(" ", u.firstName, 
-    u.lastName) AS fullName, e.experienceDescription, 
-    e.numOfYears, e.rate, CONCAT_WS(" ", b.barangay, u.street)
-        AS assistant_address, (SELECT COUNT(*) FROM ratings 
-        r WHERE r.ratingsId = u.userId) AS reviews,
-        TIMESTAMPDIFF(YEAR, u.birthDate, CURDATE()) AS 
-        assistant_age FROM userprofile u INNER JOIN 
-        experience e ON e.experienceId = u.experienceId 
-        INNER JOIN barangay b ON b.barangayId = u.barangayId 
-        WHERE u.userType = "assistant"`,{
-        type: QueryTypes.SELECT
-    }   
+            `SELECT u.userId, u.email, u.profileImage, 
+            u.gender, CONCAT_WS(" ", u.firstName, 
+            u.lastName) AS fullName, e.experienceDescription, 
+            e.numOfYears, e.rate, CONCAT_WS(" ", b.barangay, u.street)
+             AS assistant_address, (SELECT COUNT(*) FROM ratings 
+             r WHERE r.ratingsId = u.userId) AS reviews,
+             TIMESTAMPDIFF(YEAR, u.birthDate, CURDATE()) AS 
+             assistant_age FROM userprofile u INNER JOIN 
+             experience e ON e.experienceId = u.experienceId 
+             INNER JOIN barangay b ON b.barangayId = u.barangayId 
+             WHERE u.userType = "assistant" AND ApproveFlg = 1` ,{
+                type: QueryTypes.SELECT 
+            }   
         ) 
 
         console.log(results)

@@ -265,7 +265,7 @@ const addNewAdmin = async () => {
         const newAdminExperience = await xperience.create(
           {
             numOfYears: 1,
-            experienceDescription: "This experience is for admin",
+            experienceDescription: "This experience is for dummy experience",
             rate: 7777,
           },
           { transaction: t }
@@ -312,8 +312,6 @@ const addNewAdmin = async () => {
       throw error;
     }
   };
-  
-
   
   
 
@@ -462,7 +460,7 @@ const updateUserHandlerForProfile = async (req, res, next) => {
             birthDate,
             street,
             profileImage: profileImagePath || null,
-            experienceId: experienceId || null
+            experienceId: experienceId || 1
         };
 
         // Prepare data for user account update
@@ -559,6 +557,10 @@ const retrieveListUserDetails = async(req,res,next)=>{
         const userType = loggedinUserType === 'senior' ? 'assistant': 'senior';
         console.log("type:"+userType);
         console.log("userId:"+ userId);
+        let approveFlg = true;
+        if(userType === 'senior'){
+            approveFlg = false;
+        }
         const userList = await sequelize.query(`
             SELECT 
                 e.userId, 
@@ -594,10 +596,10 @@ const retrieveListUserDetails = async(req,res,next)=>{
                 ON f.messageId = latestMessage.latestMessageId 
             WHERE 
                 e.userType = :userType
-            and e.approveFlg = true
+            and e.approveFlg = :approveFlg
                 ORDER BY 
             f.date DESC `,{
-                    replacements:{loggedInUserId: userId,userType: userType},
+                    replacements:{loggedInUserId: userId,userType: userType, approveFlg:approveFlg},
                     type:QueryTypes.SELECT
                 })
 
