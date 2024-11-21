@@ -3,10 +3,10 @@ const auth = require("../auth/auth");
 const { findAssistantsForSenior,getAssistantList, addSenior, getAssistantDetailsBasedOnAppId } = require('../controller/senior-controller');
 const router = express.Router();
 
-router.put("/find-assistants",auth.verify,
+router.get("/find-assistants",auth.verify,
     auth.verifySenior,findAssistantsForSenior)
-
-router.get("/assistant-list",auth.verify,getAssistantList);
+    
+router.get("/assistant-list",auth.verify,auth.verifySenior,getAssistantList);
 
 router.post("/add-senior", addSenior);
 
