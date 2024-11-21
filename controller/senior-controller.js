@@ -7,19 +7,80 @@ const sequelize = require("../db/dbconnection");
 const { exportEncryptedData, exportDecryptedData } = require("../auth/secure");
 
 const findAssistantsForSenior = async(req,res,next)=>{
-    const {ratings,age,gender}=req.headers;
-    try{ 
+    const {rating,age,gender}=req.query;
 
-        console.log(ratings);
-        const results = [];
-        // const results = await sequelize.query(
-        //     `select userid, email, from UserProfile 
-        //     inner join Ratings 
-        //     on userId = assistant_id
-        //     where userId > 0`,{
-        //         type: QueryTypes.SELECT
-        //     }   
-        // ) 
+    try{ 
+        
+        const newAge = age ? age.split("-").map(val=>+val) : [0,0];
+        let newGender = null;
+
+        if(gender === "both" || gender === 'null'){
+            newGender = null;
+        }else {
+            newGender = gender
+        }
+        const results = await sequelize.query(
+            `SELECT 
+    ea.userId,
+ea.email,
+ea.profileImage,
+ea.gender,
+CONCAT_WS(' ', ea.firstName, ea.lastName) AS fullName,
+(
+        SELECT ROUND(AVG(ar.ratingsId), 1) 
+        FROM appointmentratings ar
+        JOIN appointment f ON ar.appointmentId = f.appointmentId
+        WHERE f.assistantId = ea.userId
+    ) AS rateAvg,
+e.experienceDescription, 
+e.numOfYears, 
+e.rate,
+CONCAT_WS(" ", b.barangay, ea.street)
+AS assistantAddress,
+(SELECT COUNT(*) FROM ratings 
+r WHERE r.ratingsId = ea.userId) AS reviews,
+TIMESTAMPDIFF(YEAR, ea.birthDate, CURDATE()) AS 
+assistantAge 
+FROM userprofile ea
+INNER JOIN experience e 
+ON e.experienceId = ea.experienceId 
+INNER JOIN barangay b 
+ON b.barangayId = ea.barangayId 
+WHERE ea.userType = 'assistant'
+  AND ea.approveFlg = true
+ AND (
+              :rating = 0 OR (
+                  SELECT ROUND(AVG(ar.ratingsId), 1)
+                  FROM appointmentratings ar
+                  JOIN appointment f ON ar.appointmentId = f.appointmentId
+                  WHERE f.assistantId = ea.userId
+              ) = :rating
+          )
+
+and (
+    (
+    :age is null or :ageTwo is null or :ageOne is null or
+    ((SELECT DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(),ea.birthDate)), '%Y') 
+    + 0)>= :ageOne
+    and
+    (SELECT DATE_FORMAT(FROM_DAYS(DATEDIFF(NOW(),ea.birthDate)), '%Y') 
+    + 0)<= :ageTwo)
+    )
+)
+AND (
+    :gender IS NULL OR LOWER(ea.gender) = :gender
+)
+    ;`,{
+    replacements:{
+        rating:rating,
+        age:age,
+        ageOne: newAge[0] || null,
+        ageTwo: newAge[1] || null,
+        gender: newGender
+    },
+                type: QueryTypes.SELECT
+            }   
+        )   
 
         res.status(201).send({
             isSuccess: true,
@@ -34,19 +95,19 @@ const findAssistantsForSenior = async(req,res,next)=>{
 const getAssistantList = async(req,res,next)=>{
     try{
         const results = await sequelize.query(
-            `SELECT u.userId, u.email, u.profileImage, 
-            u.gender, CONCAT_WS(" ", u.firstName, 
-            u.lastName) AS fullName, e.experienceDescription, 
-            e.numOfYears, e.rate, CONCAT_WS(" ", b.barangay, u.street)
-             AS assistant_address, (SELECT COUNT(*) FROM ratings 
-             r WHERE r.ratingsId = u.userId) AS reviews,
-             TIMESTAMPDIFF(YEAR, u.birthDate, CURDATE()) AS 
-             assistant_age FROM userprofile u INNER JOIN 
-             experience e ON e.experienceId = u.experienceId 
-             INNER JOIN barangay b ON b.barangayId = u.barangayId 
-             WHERE u.userType = "assistant"`,{
-                type: QueryTypes.SELECT
-            }   
+    `SELECT u.userId, u.email, u.profileImage, 
+    u.gender, CONCAT_WS(" ", u.firstName, 
+    u.lastName) AS fullName, e.experienceDescription, 
+    e.numOfYears, e.rate, CONCAT_WS(" ", b.barangay, u.street)
+        AS assistant_address, (SELECT COUNT(*) FROM ratings 
+        r WHERE r.ratingsId = u.userId) AS reviews,
+        TIMESTAMPDIFF(YEAR, u.birthDate, CURDATE()) AS 
+        assistant_age FROM userprofile u INNER JOIN 
+        experience e ON e.experienceId = u.experienceId 
+        INNER JOIN barangay b ON b.barangayId = u.barangayId 
+        WHERE u.userType = "assistant"`,{
+        type: QueryTypes.SELECT
+    }   
         ) 
 
         console.log(results)

@@ -16,7 +16,8 @@ sequelize.define('AppointmentRatings',{
         references:{
             model:Appointment,
             key:'appointmentId'
-        }  
+        },
+        unique: true  
     },
 
     ratingsId: {
