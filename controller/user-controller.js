@@ -557,6 +557,10 @@ const retrieveListUserDetails = async(req,res,next)=>{
         const userType = loggedinUserType === 'senior' ? 'assistant': 'senior';
         console.log("type:"+userType);
         console.log("userId:"+ userId);
+        let approveFlg = true;
+        if(userType === 'senior'){
+            approveFlg = false;
+        }
         const userList = await sequelize.query(`
             SELECT 
                 e.userId, 
@@ -592,10 +596,10 @@ const retrieveListUserDetails = async(req,res,next)=>{
                 ON f.messageId = latestMessage.latestMessageId 
             WHERE 
                 e.userType = :userType
-            and e.approveFlg = true
+            and e.approveFlg = :approveFlg
                 ORDER BY 
             f.date DESC `,{
-                    replacements:{loggedInUserId: userId,userType: userType},
+                    replacements:{loggedInUserId: userId,userType: userType, approveFlg:approveFlg},
                     type:QueryTypes.SELECT
                 })
 

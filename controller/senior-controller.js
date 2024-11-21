@@ -44,8 +44,8 @@ const getAssistantList = async(req,res,next)=>{
              assistant_age FROM userprofile u INNER JOIN 
              experience e ON e.experienceId = u.experienceId 
              INNER JOIN barangay b ON b.barangayId = u.barangayId 
-             WHERE u.userType = "assistant"`,{
-                type: QueryTypes.SELECT
+             WHERE u.userType = "assistant" AND ApproveFlg = 1` ,{
+                type: QueryTypes.SELECT 
             }   
         ) 
 
